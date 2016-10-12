@@ -1,2 +1,2 @@
 # Sun-Roler
-Rolling down your sunscreenes
+Rolling down your sunscreens
