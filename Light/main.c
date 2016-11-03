@@ -1,5 +1,4 @@
 #include "AVR_TTC_scheduler.h"
-#include "TMI1638lib.c"
 #include "ADClib.c"
 #include "UART.c"
 #include <avr/io.h>
@@ -164,9 +163,9 @@ void SCH_Init_T1(void)
    // Values for 1ms and 10ms ticks are provided for various crystals
 
    // Hier moet de timer periode worden aangepast ....!
-   OCR1A = (uint16_t)625;   		     // 10ms = (256/16.000.000) * 625
-   TCCR1B = (1 << CS12) | (1 << WGM12);  // prescale op 64, top counter = value OCR1A (CTC mode)
-   TIMSK1 = 1 << OCIE1A;   		     // Timer 1 Output Compare A Match Interrupt Enable
+   OCR1A = (uint16_t)250;   							// 1ms = (128/16.000.000) * 250
+   TCCR1B = (1 << CS10) | (1 << CS11) | (1 << WGM12);	// prescale op 64, top counter = value OCR1A (CTC mode)
+   TIMSK1 = 1 << OCIE1A;   								// Timer 1 Output Compare A Match Interrupt Enable
 }
 
 /*------------------------------------------------------------------*-
@@ -248,17 +247,43 @@ void sendData(){
 	uart_transmit_value(10, (totalLux/2));
 	//uart_transmit_value(10, 210);
 	totalLux = 0;
-
 }
+
+uint8_t getScreenPosition(){
+	return 10;
+}
+
+void changeScreen(uint8_t change){
+	if (change > getScreenPosition()){
+		//uitrollen
+	} else if (change < getScreenPosition()){
+		//inrollen
+	} else {
+		return;
+	}
+}
+
+void checkData(){
+	if (uart_check_receivebuffer() == 1){
+		changeScreen(uart_receive());
+	}
+}
+
+void initScreen(){
+	DDRB = 0b11111111;
+	PORTB = _BV(PORTB0);
+}
+
+
 
 int main()
 {
  	ADC_init();
- 	TMI1638_setup();
 	uart_init();
+	initScreen();
  	SCH_Init_T1();
- 	SCH_Add_Task(checkLux, 0, 3000);
-	SCH_Add_Task(sendData, 1000, 6000);
+ 	SCH_Add_Task(checkLux, 0, 30000);		// Check light levels; Every 30 seconds
+	SCH_Add_Task(sendData, 1000, 60000);	// Send data via UART; Every 60 seconds with a delay of 1 second
 	
  	SCH_Start();
  	while(1){

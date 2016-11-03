@@ -11,8 +11,8 @@ void uart_init()
 	UBRR0L = 51;
 	// disable U2X mode
 	UCSR0A = 0;
-	// enable transmitter
-	UCSR0B = _BV(TXEN0);
+	// enable transmitter and receiver
+	UCSR0B = _BV(TXEN0) | _BV(RXEN0);
 	// set frame format : asynchronous, 8 data bits, 1 stop bit, no parity
 	UCSR0C = _BV(UCSZ01) | _BV(UCSZ00);
 }
@@ -24,7 +24,7 @@ void uart_transmit(uint8_t data)
 	loop_until_bit_is_set(UCSR0A, UDRE0);
 	// send the data
 	UDR0 = data;
-}void uart_transmit_value(uint8_t identification, uint32_t data){	uart_transmit(identification);	uart_transmit((data & 0xff000000UL) >> 24);
+}uint8_t uart_receive(){	return UDR0;}uint8_t uart_check_receivebuffer(){	if (bit_is_set(UCSR0A, RXC0) > 0){		return 1;	} else {		return 0;	}}void uart_transmit_value(uint8_t identification, uint32_t data){	uart_transmit(identification);	uart_transmit((data & 0xff000000UL) >> 24);
 	uart_transmit((data & 0x00ff0000UL) >> 16);
 	uart_transmit((data & 0x0000ff00UL) >>  8);
 	uart_transmit((data & 0x000000ffUL)      );}
