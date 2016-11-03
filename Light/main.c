@@ -1,6 +1,7 @@
 #include "AVR_TTC_scheduler.h"
 #include "TMI1638lib.c"
 #include "ADClib.c"
+#include "UART.c"
 #include <avr/io.h>
 #include <avr/interrupt.h>
 
@@ -233,25 +234,35 @@ double getLux(){
 	return lux;
 }
 
-void printAnalogToScreen(){
+uint32_t totalLux= 0;
+
+void checkLux(){
 	uint32_t lux = 0;
 	for (uint8_t i = 0; i <= 25; i++){
 		lux += getLux();
 	}
-	TMI1638_writeNumber(lux/25);
+	totalLux += (lux/25);
+}
+
+void sendData(){
+	uart_transmit_value(10, (totalLux/2));
+	//uart_transmit_value(10, 210);
+	totalLux = 0;
+
 }
 
 int main()
 {
  	ADC_init();
  	TMI1638_setup();
+	uart_init();
  	SCH_Init_T1();
- 	SCH_Add_Task(printAnalogToScreen, 0, 100);
+ 	SCH_Add_Task(checkLux, 0, 3000);
+	SCH_Add_Task(sendData, 1000, 6000);
 	
  	SCH_Start();
  	while(1){
  		SCH_Dispatch_Tasks();
-		
  	}
 	return(0);
 }
