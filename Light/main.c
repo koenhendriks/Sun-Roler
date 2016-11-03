@@ -226,15 +226,35 @@ ISR(TIMER1_COMPA_vect)
 
 // ------------------------------------------------------------------
 
+uint32_t totalLux= 0;		// This value is used to store the amount of Lux
+
+/*
+* getLux
+*
+* This function is used to calculate the amount of Lux measured by the LDR
+*/
 double getLux(){
-	double voltage = ADC_getValue() * 5;
-	voltage = voltage / 1024;
-	float lux = (500*(5-voltage))/(10*voltage);
+	double voltage = ADC_getValue() * 5;		// 5 is used because vcc = 5V.
+	voltage = voltage / 1024;					/* 1024 is used because the ADC returns a value between
+												   0 and 1024 representing the voltage. */
+	float lux = (500*(5-voltage))/(10*voltage);	/* Lux is calculated by dividing 500 by the resistance of the LDR in kOhm
+												   The resistance of the LDR is calculated by:
+												   Vcc * R(light) = Vout * (R(light) + R(resistor)) 
+												   Where
+												   Vcc = 5V (Arduino)
+												   Vout = the output of the circuit in Volt
+												   R(light) = The resistance of the LDR
+												   R(resistor) = 10 kOhm (The resistance of the resistor in the circuit in kOhm) */
 	return lux;
 }
 
-uint32_t totalLux= 0;
-
+/*
+* checkLux
+*
+* This function checks the amount of lux 25 times and stores the average
+* in a value called 'totalLux'.
+* This function is supposed to be called twice a minute (30s)
+*/
 void checkLux(){
 	uint32_t lux = 0;
 	for (uint8_t i = 0; i <= 25; i++){
@@ -243,6 +263,13 @@ void checkLux(){
 	totalLux += (lux/25);
 }
 
+/*
+* sendData
+*
+* This function is used to send UART frames containing the identification number
+* and the amount of Lux measured over 50 samples (25 per 30 seconds).
+* Afterwards it resets 'totalLux'
+*/
 void sendData(){
 	uart_transmit_value(10, (totalLux/2));
 	//uart_transmit_value(10, 210);
@@ -269,7 +296,12 @@ void checkData(){
 	}
 }
 
-void initScreen(){
+/*
+* initLED
+*
+* Used to initialize the LEDs which represent the motor
+*/
+void initLED(){
 	DDRB = 0b11111111;
 	PORTB = _BV(PORTB0);
 }
@@ -280,8 +312,9 @@ int main()
 {
  	ADC_init();
 	uart_init();
-	initScreen();
+	initLED();
  	SCH_Init_T1();
+	 
  	SCH_Add_Task(checkLux, 0, 30000);		// Check light levels; Every 30 seconds
 	SCH_Add_Task(sendData, 1000, 60000);	// Send data via UART; Every 60 seconds with a delay of 1 second
 	
