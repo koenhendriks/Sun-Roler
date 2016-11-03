@@ -1,12 +1,18 @@
+/*
+* This file is used to communicate via UART
+*/
 #include <avr/io.h>
 #include <stdlib.h>
 #include <avr/sfr_defs.h>
-// output on USB = PD1 = board pin 1
-// datasheet p.190; F_OSC = 16 MHz & baud rate = 19.200
 
+/*
+* Uart_init
+*
+* Used to intialize the UART communication
+*/
 void uart_init()
 {
-	// set the baud rate
+	// set the baudrate (19k2)
 	UBRR0H = 0;
 	UBRR0L = 51;
 	// disable U2X mode
@@ -17,6 +23,11 @@ void uart_init()
 	UCSR0C = _BV(UCSZ01) | _BV(UCSZ00);
 }
 
+/*
+* Uart_transmit
+*
+* This functions sends 8 bits of data (1 frame)
+*/
 void uart_transmit(uint8_t data)
 {
 	// wait for an empty transmit buffer
@@ -24,7 +35,7 @@ void uart_transmit(uint8_t data)
 	loop_until_bit_is_set(UCSR0A, UDRE0);
 	// send the data
 	UDR0 = data;
-}uint8_t uart_receive(){	return UDR0;}uint8_t uart_check_receivebuffer(){	if (bit_is_set(UCSR0A, RXC0) > 0){		return 1;	} else {		return 0;	}}void uart_transmit_value(uint8_t identification, uint32_t data){	uart_transmit(identification);	uart_transmit((data & 0xff000000UL) >> 24);
+}/** Uart_transmit_value** This function sends 5 frames. The first one for the identification of the sensor* And the 4 thereafter contain the data (32-bits)*/void uart_transmit_value(uint8_t identification, uint32_t data){	uart_transmit(identification);	uart_transmit((data & 0xff000000UL) >> 24);
 	uart_transmit((data & 0x00ff0000UL) >> 16);
 	uart_transmit((data & 0x0000ff00UL) >>  8);
-	uart_transmit((data & 0x000000ffUL)      );}
+	uart_transmit((data & 0x000000ffUL)      );}/** Uart_receive** This function returns the uart receive buffer. You can check if* there is data in this buffer by calling uart_check_receivebuffer()*/uint8_t uart_receive(){	return UDR0;}/** Uart_check_receivebuffer** This function returns 1 when there is data in the receive buffer* This functions returns 0 when there isn't any data in the receive buffer** You can get the data out of the receive buffer by calling uart_receive()*/uint8_t uart_check_receivebuffer(){	if (bit_is_set(UCSR0A, RXC0) > 0){		return 1;	} else {		return 0;	}}
