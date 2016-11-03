@@ -276,10 +276,6 @@ void sendData(){
 	totalLux = 0;
 }
 
-uint8_t getScreenPosition(){
-	return 10;
-}
-
 void changeScreen(uint8_t change){
 	if (change > getScreenPosition()){
 		//uitrollen
@@ -302,8 +298,10 @@ void checkData(){
 * Used to initialize the LEDs which represent the motor
 */
 void initLED(){
-	DDRB = 0b11111111;
-	PORTB = _BV(PORTB0);
+	DDRB |= 0b00000111;		// Set B0 - B2 to output to accommodate for three LEDs
+	PORTB = _BV(PORTB0);	// Set B0 high; this is the starting position
+	// Misschien moeten we hier nog de afstand checken zodat het goed gaat
+	// als je tijens het uitrollen de arduino aansluit
 }
 
 
