@@ -4,6 +4,8 @@
 #include <avr/io.h>
 #include <stdlib.h>
 #include <avr/sfr_defs.h>
+#define F_CPU 16E6
+#include <util/delay.h>
 
 /*
 * HCSR04_init
@@ -12,17 +14,33 @@
 */
 void HCSR04_init()
 {
-	// Iets met timers en poorten ofzo
-	DDRB |= (1<< (PORTD4))		// This port is used for Echo
-	PORTD &= ~(1<<PORTD3);		// Set the trigger port to low
+	DDRD &=~ (1 << PIND3);
+	DDRD |= (1 << PIND2);
 	
-	// Hier moet de timer geinitialiseerd worden denk ik
+	TCCR1B |= (1 << CS10); //No prescaling
+	TCNT1 = 0;			//Reset timer
+	TIMSK1 |= (1 << TOIE1); //Timer overflow interrupt enable
 	
+	EICRA |= (1 << ISC10); //Any logical change on INT1
+	EIMSK |= (1 << INT1); //Enable INT1
 }
 
+unsigned char working;
+unsigned char rising_edge;
 
+uint8_t error;
 
-uint8_t getDistance(){
-	// De afstand teruggeven
-	// Iets met tijd en 343 m/s
+void Send_signal()
+{
+	if(working ==0) //Be sure that conversation is finished
+	{
+		_delay_ms(50);		//Restart HC-SR04
+		PORTD &=~ (1 << PIND2);
+		_delay_us(1);
+		PORTD |= (1 << PIND2); //Send 10us second pulse
+		_delay_us(10);
+		PORTD &=~ (1 << PIND2);
+		working = 1;	//Be sure that it is ready
+		error = 0;		//Clean errors
+	}
 }

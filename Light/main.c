@@ -1,6 +1,8 @@
 #include "AVR_TTC_scheduler.h"
 #include "ADClib.c"
 #include "UART.c"
+#include "HC-SR04.c"
+#include "TMI1638lib.c"
 #include <avr/io.h>
 #include <avr/interrupt.h>
 
@@ -150,7 +152,7 @@ unsigned char SCH_Delete_Task(const unsigned char TASK_INDEX)
 
 -*------------------------------------------------------------------*/
 
-void SCH_Init_T1(void)
+void SCH_Init_T0(void)
 {
    unsigned char i;
 
@@ -159,13 +161,13 @@ void SCH_Init_T1(void)
       SCH_Delete_Task(i);
    }
 
-   // Set up Timer 1
+   // Set up Timer 0
    // Values for 1ms and 10ms ticks are provided for various crystals
 
    // Hier moet de timer periode worden aangepast ....!
-   OCR1A = (uint16_t)250;   							// 1ms = (128/16.000.000) * 250
-   TCCR1B = (1 << CS10) | (1 << CS11) | (1 << WGM12);	// prescale op 64, top counter = value OCR1A (CTC mode)
-   TIMSK1 = 1 << OCIE1A;   								// Timer 1 Output Compare A Match Interrupt Enable
+   OCR0A = (uint8_t)250;   							// 1ms = (128/16.000.000) * 250
+   TCCR0B = (1 << CS00) | (1 << CS01) | (1 << WGM02);	// prescale op 64, top counter = value OCR1A (CTC mode)
+   TIMSK0 = 1 << OCIE0A;   								// Timer 1 Output Compare A Match Interrupt Enable
 }
 
 /*------------------------------------------------------------------*-
@@ -195,7 +197,7 @@ void SCH_Start(void)
 
 -*------------------------------------------------------------------*/
 
-ISR(TIMER1_COMPA_vect)
+ISR(TIMER0_COMPA_vect)
 {
    unsigned char Index;
    for(Index = 0; Index < SCH_MAX_TASKS; Index++)
@@ -225,6 +227,39 @@ ISR(TIMER1_COMPA_vect)
 }
 
 // ------------------------------------------------------------------
+uint16_t timer_value = 0;
+int distance_cm = 0;
+
+ISR (TIMER1_OVF_vect)
+{
+	if(rising_edge==1) //Check if there was echo
+	{
+		timer_value++;
+		/*Check if isnt out of range*/
+		if (timer_value > 91)
+		{
+			working = 0;
+			rising_edge = 0;
+			error = 1;
+		}
+	}
+}
+
+ISR (INT1_vect)
+{
+	if(rising_edge==0)
+	{
+		rising_edge=1;
+		TCNT1 = 0;
+		timer_value = 0;
+	}
+	else //Check if echo turned low, calculate distance
+	{
+		rising_edge = 0;
+		distance_cm = TCNT1 / 1000;
+	}
+}
+
 
 uint32_t totalLux= 0;		// This value is used to store the amount of Lux
 
@@ -276,10 +311,22 @@ void sendData(){
 	totalLux = 0;
 }
 
+uint16_t getDistance(){
+	uint32_t value= 0;
+	for ( uint8_t i = 0; i <= 10; i++){
+		Send_signal();
+		while (working = 0) {
+			_delay_us(10);
+		}
+		value += distance_cm;
+	}
+	return (uint16_t) value / 10;
+}
+
 void changeScreen(uint8_t change){
-	if (change > getScreenPosition()){
+	if (change > getDistance()){
 		//uitrollen
-	} else if (change < getScreenPosition()){
+	} else if (change < getDistance()){
 		//inrollen
 	} else {
 		return;
@@ -306,15 +353,24 @@ void initLED(){
 
 
 
+void printDistance(){
+	TMI1638_writeNumber(getDistance());
+}
+
 int main()
 {
  	ADC_init();
 	uart_init();
 	initLED();
- 	SCH_Init_T1();
+	TMI1638_setup();
+	TMI1638_writeNumber(10);
+	HCSR04_init();
+ 	SCH_Init_T0();
 	 
  	SCH_Add_Task(checkLux, 0, 30000);		// Check light levels; Every 30 seconds
 	SCH_Add_Task(sendData, 1000, 60000);	// Send data via UART; Every 60 seconds with a delay of 1 second
+	SCH_Add_Task(printDistance, 0, 1000);
+	// Hier moeten we de receive buffer nog checken?
 	
  	SCH_Start();
  	while(1){
