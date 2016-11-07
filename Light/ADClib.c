@@ -33,3 +33,23 @@ void ADC_init()
 	//value = ( value << 8 ) || ADCL;
 	return ADC; // 10-bit resolution
 }
+
+/*
+* getLux
+*
+* This function is used to calculate the amount of Lux measured by the LDR
+*/
+double getLux(){
+	double voltage = ADC_getValue() * 5;		// 5 is used because vcc = 5V.
+	voltage = voltage / 1024;					/* 1024 is used because the ADC returns a value between
+												   0 and 1024 representing the voltage. */
+	float lux = (500*(5-voltage))/(10*voltage);	/* Lux is calculated by dividing 500 by the resistance of the LDR in kOhm
+												   The resistance of the LDR is calculated by:
+												   Vcc * R(light) = Vout * (R(light) + R(resistor)) 
+												   Where
+												   Vcc = 5V (Arduino)
+												   Vout = the output of the circuit in Volt
+												   R(light) = The resistance of the LDR
+												   R(resistor) = 10 kOhm (The resistance of the resistor in the circuit in kOhm) */
+	return lux;
+}
