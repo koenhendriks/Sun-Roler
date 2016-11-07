@@ -1,11 +1,7 @@
+{% extends "./template.html" %}
 
-{# Load the tag library #}
-{% load bootstrap3 %}
+{% block title %}{{ section.title }}{% endblock %}
 
-{# Load CSS and JavaScript #}
-{% bootstrap_css %}
-{% bootstrap_javascript %}
-
-{# Display django.contrib.messages as Bootstrap alerts #}
-{% bootstrap_messages %}
-
+{% block content %}
+    <h1>Title</h1>
+{% endblock %}

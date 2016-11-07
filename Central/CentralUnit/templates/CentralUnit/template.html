@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+    {% load static %}
+    {% load bootstrap3 %}
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Central Unit</title>
+    {% bootstrap_css %}
+</head>
+<body>
+
+ <!-- Page Content -->
+    <div class="container-fluid">
+
+        {% block content %}
+        {% endblock %}
+
+    </div>
+    <!-- /.container -->
+    {% bootstrap_javascript %}
+
+</body>
+</html>
