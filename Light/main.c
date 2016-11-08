@@ -7,7 +7,7 @@
 #include <avr/interrupt.h>
 #include <avr/sfr_defs.h>
 
-
+void changeScreen(uint8_t change);
 
 // The array of tasks
 sTask SCH_tasks_G[SCH_MAX_TASKS];
@@ -233,6 +233,17 @@ uint16_t timer_value = 0;
 int distance_cm = 0;
 // This value is used to store the amount of Lux
 uint32_t totalLux= 0;
+// These value are used to check if the sensor is connected to a central unit
+uint8_t centralUnit_counter = 0;
+char centralUnitConnected = 0;
+
+// This is for Celcius
+//uint8_t lowerLimit = 20;
+//uint8_t upperLimit = 25;
+
+// This is for Lux
+uint16_t lowerLimit = 200;
+uint16_t upperLimit = 300;
 
 
 ISR (TIMER1_OVF_vect)
@@ -279,18 +290,32 @@ void checkLux(){
 }
 
 /*
-* sendData
+* sendDataOrChangeScreen
 *
 * This function is used to send UART frames containing the identification number
 * and the amount of Lux measured over 50 samples (25 per 30 seconds).
 * Afterwards it resets 'totalLux'
 */
-void sendData(){
-	uart_transmit_value(10, (totalLux/2));
-	//uart_transmit_value(10, 210);
+void sendDataOrChangeScreen(){
+	if (centralUnitConnected){
+		uart_transmit_value(10, (totalLux/2));
+	} else {
+		if (totalLux/2 > upperLimit)
+		{
+			changeScreen(30);
+		} else if (totalLux/2 < lowerLimit)
+		{
+			changeScreen(10);
+		}
+	}
 	totalLux = 0;
 }
 
+/*
+*
+*
+*
+*/
 uint16_t getDistance(){
 	uint32_t value= 0;
 	for ( uint8_t i = 0; i <= 10; i++){
@@ -357,7 +382,10 @@ void checkData(){
 	if (uart_check_receivebuffer() == 1){
 		uint8_t frame = uart_receive();
 		if (frame > 0){
-		changeScreen(frame);
+			centralUnit_counter = 255;
+			if (frame < 255){
+				changeScreen(frame);
+			}
 		}
 	}
 }
@@ -372,14 +400,19 @@ void initLED(){
 	PORTB = _BV(PORTB0);	// Set B0 high; this is the starting position
 }
 
+void checkCentralUnit(){
+	if (centralUnit_counter < 1){
+		centralUnitConnected = 0;
+	} else {
+		centralUnitConnected = 1;
+	}
+	centralUnit_counter = centralUnit_counter - 1;
+}
+
 
 // This isn't needed probably
 void printDistance(){
 	TMI1638_writeNumber(getDistance());
-}
-
-void temp(){
-	changeScreen(10);
 }
 
 int main()
@@ -393,10 +426,10 @@ int main()
  	SCH_Init_T0();
 	 
  	SCH_Add_Task(checkLux, 0, 30000);		// Check light levels; Every 30 seconds
- 	SCH_Add_Task(checkData, 500, 30000);	// Check UART data; Every 10 seconds with a delay of 0,5 second
-	SCH_Add_Task(sendData, 1000, 60000);	// Send data via UART; Every 60 seconds with a delay of 1 second
+ 	SCH_Add_Task(checkData, 500, 5000);	// Check UART data; Every 5 seconds with a delay of 0,5 second
+ 	SCH_Add_Task(sendDataOrChangeScreen, 1000, 60000);	// Send data via UART; Every 60 seconds with a delay of 1 second
+ 	SCH_Add_Task(checkCentralUnit, 500, 1000);	// Send data via UART; Every second with a delay of 0,5 second
 	SCH_Add_Task(printDistance, 0, 1000);
-	//SCH_Add_Task(temp, 0, 25000);
 	
  	SCH_Start();
  	while(1){
