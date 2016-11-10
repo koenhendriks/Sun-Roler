@@ -1,0 +1,36 @@
+html, body{
+    overflow: hidden;
+    width: 320px;
+    height: 240px;
+}
+
+.navigation{
+    position: fixed;
+    left: 0;
+    top: 200px;
+    width: 320px;
+    height: 40px;
+    background: lightgreen;
+}
+
+.navigation-block{
+    width: 80px;
+    height: 40px;
+    border: 1px solid black;
+    float:left;
+    font-size:35px;
+}
+
+.container-fluid, .swiper-container {
+    width: 320px;
+    height: 200px;
+}
+
+html, body, .container-fluid {
+    margin: 0 0 0 0;
+    padding: 0 0 0 0;
+}
+
+p {
+    font-size: 2em;
+}

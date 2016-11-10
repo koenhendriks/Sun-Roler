@@ -17,56 +17,7 @@
             </div>
         </div>
         <div class="swiper-slide">
-            <div class="swiper-container swiper-container-v">
-                <div class="swiper-wrapper">
-                    <div class="swiper-slide">
-                        <div class="row">
-                            <div class="col-xs-12">
-                                <div class="row">
-                                    <div class="col-xs-12"><p class="text-center">Hier komt info over een sensoor ofzo</p></div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="swiper-slide">
-                        <div class="row">
-                            <div class="col-xs-12">
-                                <div class="row">
-                                    <div class="col-xs-12"><p class="text-center">Nog meer info hierzo haha</p></div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="swiper-slide">
-                        <div class="row">
-                            <div class="col-xs-12">
-                                <div class="row">
-                                    <div class="col-xs-12"><p class="text-center">Andere info</p></div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="swiper-slide">
-                        <div class="row">
-                            <div class="col-xs-12">
-                                <div class="row">
-                                    <div class="col-xs-12"><p class="text-center">Nog meer info hierzo haha</p></div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="swiper-slide">
-                        <div class="row">
-                            <div class="col-xs-12">
-                                <div class="row">
-                                    <div class="col-xs-12"><p class="text-center">Nog meer info hierzo haha</p></div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="swiper-pagination swiper-pagination-v"></div>
-            </div>
+            {% include "./slides/v-slide-1.html" %}
         </div>
         <div class="swiper-slide">
             <div class="row">
@@ -87,9 +38,9 @@
             </div>
         </div>
     </div>
+</div>
 
 {% endblock %}
-
 {% block script %}
     <script>
         var swiperH = new Swiper('.swiper-container-h', {
