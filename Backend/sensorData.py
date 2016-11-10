@@ -63,7 +63,7 @@ class SD:
             data: The data to send to the serial device.
 
         """
-        self.conn.write(data)
+        self.conn.write(data.to_bytes(1, byteorder='big'))
 
     def control_sunscreens(self):
         """ Check whether sunscreens need to be rolled in or rolled out.
@@ -88,9 +88,10 @@ class SD:
                 roll_out += 1
 
         if roll_in == len(sensors):
-            self.send_data(str(roll_in_distance[0]['setting_value']).encode())
+            self.send_data(int(roll_in_distance[0]['setting_value']))
         elif roll_out >= 1:
-            self.send_data(str(roll_in_distance[0]['setting_value']).encode())
+            self.send_data(int(roll_out_distance[0]['setting_value']))
 
 sd = SD("COM4", 19200, 0)
 sd.read_data()
+
