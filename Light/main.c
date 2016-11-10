@@ -5,11 +5,12 @@
 #include "TMI1638lib.c"
 #include <avr/io.h>
 #include <avr/interrupt.h>
+#include <avr/sfr_defs.h>
+
+void changeScreen(uint8_t change);
 
 // The array of tasks
 sTask SCH_tasks_G[SCH_MAX_TASKS];
-
-
 /*------------------------------------------------------------------*-
 
   SCH_Dispatch_Tasks()
@@ -227,8 +228,25 @@ ISR(TIMER0_COMPA_vect)
 }
 
 // ------------------------------------------------------------------
+// These values are used for the ultrasonic sensor
 uint16_t timer_value = 0;
 int distance_cm = 0;
+// This value is used to store the amount of Lux
+uint32_t totalLux= 0;
+// These value are used to check if the sensor is connected to a central unit
+uint8_t centralUnit_counter = 0;
+char centralUnitConnected = 0;
+
+// This is for Celcius
+//uint8_t lowerLimit = 20;
+//uint8_t upperLimit = 25;
+//uint8_t sensor_id = 3;
+
+// This is for Lux
+uint16_t lowerLimit = 200;
+uint16_t upperLimit = 300;
+uint8_t sensor_id = 5;
+
 
 ISR (TIMER1_OVF_vect)
 {
@@ -236,8 +254,7 @@ ISR (TIMER1_OVF_vect)
 	{
 		timer_value++;
 		/*Check if isnt out of range*/
-		if (timer_value > 91)
-		{
+		if (timer_value > 91){
 			working = 0;
 			rising_edge = 0;
 			error = 1;
@@ -247,8 +264,7 @@ ISR (TIMER1_OVF_vect)
 
 ISR (INT1_vect)
 {
-	if(rising_edge==0)
-	{
+	if(rising_edge==0){
 		rising_edge=1;
 		TCNT1 = 0;
 		timer_value = 0;
@@ -258,29 +274,6 @@ ISR (INT1_vect)
 		rising_edge = 0;
 		distance_cm = TCNT1 / 1000;
 	}
-}
-
-
-uint32_t totalLux= 0;		// This value is used to store the amount of Lux
-
-/*
-* getLux
-*
-* This function is used to calculate the amount of Lux measured by the LDR
-*/
-double getLux(){
-	double voltage = ADC_getValue() * 5;		// 5 is used because vcc = 5V.
-	voltage = voltage / 1024;					/* 1024 is used because the ADC returns a value between
-												   0 and 1024 representing the voltage. */
-	float lux = (500*(5-voltage))/(10*voltage);	/* Lux is calculated by dividing 500 by the resistance of the LDR in kOhm
-												   The resistance of the LDR is calculated by:
-												   Vcc * R(light) = Vout * (R(light) + R(resistor)) 
-												   Where
-												   Vcc = 5V (Arduino)
-												   Vout = the output of the circuit in Volt
-												   R(light) = The resistance of the LDR
-												   R(resistor) = 10 kOhm (The resistance of the resistor in the circuit in kOhm) */
-	return lux;
 }
 
 /*
@@ -299,18 +292,31 @@ void checkLux(){
 }
 
 /*
-* sendData
+* sendDataOrChangeScreen
 *
 * This function is used to send UART frames containing the identification number
 * and the amount of Lux measured over 50 samples (25 per 30 seconds).
 * Afterwards it resets 'totalLux'
 */
-void sendData(){
-	uart_transmit_value(10, (totalLux/2));
-	//uart_transmit_value(10, 210);
+void sendDataOrChangeScreen(){
+	uart_transmit_value(sensor_id, (totalLux/2));
+	if (!centralUnitConnected){
+		if (totalLux/2 > upperLimit)
+		{
+			changeScreen(30);
+		} else if (totalLux/2 < lowerLimit)
+		{
+			changeScreen(10);
+		}
+	}
 	totalLux = 0;
 }
 
+/*
+*
+*
+*
+*/
 uint16_t getDistance(){
 	uint32_t value= 0;
 	for ( uint8_t i = 0; i <= 10; i++){
@@ -323,20 +329,70 @@ uint16_t getDistance(){
 	return (uint16_t) value / 10;
 }
 
+/*
+* setLED
+*
+* 0 = green
+* 1 = red
+*/
+void setLED(uint8_t color){
+	// Clear LEDs
+	PORTB = PORTB & ~_BV(PINB0);
+	PORTB = PORTB & ~_BV(PINB2);
+	if (color == 0){ // Green
+		// Set green LED
+		PORTB = PORTB | _BV(PINB0);
+		} else { // Red
+		// Set red LED
+		PORTB = PORTB | _BV(PINB2);
+	}
+}
+
+/*
+*
+*
+*/
 void changeScreen(uint8_t change){
 	if (change > getDistance()){
-		//uitrollen
+		setLED(1);
+		while (change > getDistance()){
+			PORTB = PORTB | _BV(PINB1);
+			_delay_ms(250);
+			PORTB = PORTB & ~_BV(PINB1);
+			_delay_ms(250);
+			//TMI1638_writeNumber(getDistance());
+		}
+		return;
 	} else if (change < getDistance()){
-		//inrollen
+		setLED(0);
+		while (change < getDistance()){
+			PORTB = PORTB | _BV(PINB1);
+			_delay_ms(250);
+			PORTB = PORTB & ~_BV(PINB1);
+			_delay_ms(250);
+			//TMI1638_writeNumber(getDistance());
+					
+		}
+		return;
 	} else {
 		return;
 	}
 }
 
 void checkData(){
-	if (uart_check_receivebuffer() == 1){
-		changeScreen(uart_receive());
-	}
+	//if (uart_check_receivebuffer() == 1){
+		uint8_t frame = uart_receive();
+		TMI1638_writeNumber(frame);
+		if (frame > 0){
+			PORTB = PORTB | _BV(PINB0);
+			PORTB = PORTB | _BV(PINB1);
+			PORTB = PORTB | _BV(PINB2);
+			centralUnit_counter = 255;
+			if (frame < 255){
+				changeScreen(frame);
+			}
+		}
+	//}
 }
 
 /*
@@ -347,14 +403,21 @@ void checkData(){
 void initLED(){
 	DDRB |= 0b00000111;		// Set B0 - B2 to output to accommodate for three LEDs
 	PORTB = _BV(PORTB0);	// Set B0 high; this is the starting position
-	// Misschien moeten we hier nog de afstand checken zodat het goed gaat
-	// als je tijens het uitrollen de arduino aansluit
+}
+
+void checkCentralUnit(){
+	if (centralUnit_counter < 1){
+		centralUnitConnected = 0;
+	} else {
+		centralUnitConnected = 1;
+	}
+	centralUnit_counter = centralUnit_counter - 1;
 }
 
 
-
+// This isn't needed probably
 void printDistance(){
-	TMI1638_writeNumber(getDistance());
+	//TMI1638_writeNumber(getDistance());
 }
 
 int main()
@@ -363,14 +426,15 @@ int main()
 	uart_init();
 	initLED();
 	TMI1638_setup();
-	TMI1638_writeNumber(10);
+	TMI1638_writeNumber(3);
 	HCSR04_init();
  	SCH_Init_T0();
 	 
  	SCH_Add_Task(checkLux, 0, 30000);		// Check light levels; Every 30 seconds
-	SCH_Add_Task(sendData, 1000, 60000);	// Send data via UART; Every 60 seconds with a delay of 1 second
+ 	SCH_Add_Task(checkData, 500, 5000);	// Check UART data; Every 5 seconds with a delay of 0,5 second
+ 	SCH_Add_Task(sendDataOrChangeScreen, 1000, 60000);	// Send data via UART; Every 60 seconds with a delay of 1 second
+ 	SCH_Add_Task(checkCentralUnit, 500, 1000);	// Send data via UART; Every second with a delay of 0,5 second
 	SCH_Add_Task(printDistance, 0, 1000);
-	// Hier moeten we de receive buffer nog checken?
 	
  	SCH_Start();
  	while(1){
