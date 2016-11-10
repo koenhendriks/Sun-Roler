@@ -21,6 +21,22 @@ html, body{
     font-size:35px;
 }
 
+.panel{
+    margin-bottom: 0 !important;
+}
+
+.panel-full{
+    height: 154px !important;
+}
+
+.icon-large{
+    font-size: 8em;
+}
+
+.text-large{
+    font-size: 2.4em;
+}
+
 .container-fluid, .swiper-container {
     width: 320px;
     height: 200px;
@@ -29,8 +45,4 @@ html, body{
 html, body, .container-fluid {
     margin: 0 0 0 0;
     padding: 0 0 0 0;
-}
-
-p {
-    font-size: 2em;
 }
