@@ -88,10 +88,9 @@ class SD:
                 roll_out += 1
 
         if roll_in == len(sensors):
-            self.send_data(int(roll_in_distance[0]['setting_value']))
+            self.send_data(str(roll_in_distance[0]['setting_value']).encode())
         elif roll_out >= 1:
-            print("send")
-            self.send_data(int(roll_out_distance[0]['setting_value']))
+            self.send_data(str(roll_in_distance[0]['setting_value']).encode())
 
 sd = SD("COM4", 19200, 0)
 sd.read_data()
