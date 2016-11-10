@@ -233,6 +233,7 @@ uint16_t timer_value = 0;
 int distance_cm = 0;
 // This value is used to store the amount of Lux
 uint32_t totalLux= 0;
+uint32_t totalCelcius= 0;
 // These value are used to check if the sensor is connected to a central unit
 uint8_t centralUnit_counter = 0;
 char centralUnitConnected = 0;
@@ -289,6 +290,21 @@ void checkLux(){
 		lux += getLux();
 	}
 	totalLux += (lux/25);
+}
+
+/*
+* checkCeclius
+*
+* This function checks the amount of celcius 25 times and stores the average
+* in a value called 'totalCelcius'.
+* This function is supposed to be called twice a minute (30s)
+*/
+void checkCeclius(){
+	uint32_t celcius = 0;
+	for (uint8_t i = 0; i <= 25; i++){
+		celcius += getLux();
+	}
+	totalCelcius += (celcius/25);
 }
 
 /*
@@ -429,8 +445,12 @@ int main()
 	TMI1638_writeNumber(3);
 	HCSR04_init();
  	SCH_Init_T0();
-	 
- 	SCH_Add_Task(checkLux, 0, 30000);		// Check light levels; Every 30 seconds
+	
+	if (sensor_id == 5){ 
+ 		SCH_Add_Task(checkLux, 0, 30000);		// Check light levels; Every 30 seconds
+	} else if (sensor_id == 3){
+		SCH_Add_Task(checkLux, 0, 30000);		// Check temperature levels; Every 30 seconds
+	}
  	SCH_Add_Task(checkData, 500, 5000);	// Check UART data; Every 5 seconds with a delay of 0,5 second
  	SCH_Add_Task(sendDataOrChangeScreen, 1000, 60000);	// Send data via UART; Every 60 seconds with a delay of 1 second
  	SCH_Add_Task(checkCentralUnit, 500, 1000);	// Send data via UART; Every second with a delay of 0,5 second

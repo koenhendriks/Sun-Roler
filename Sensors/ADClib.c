@@ -53,3 +53,16 @@ double getLux(){
 												   R(resistor) = 10 kOhm (The resistance of the resistor in the circuit in kOhm) */
 	return lux;
 }
+
+/*
+* getCeclius
+*
+* This function is used to calculate the amount of Celcius measured by the sensor
+*/
+double getCelcius(){
+	double voltage = ADC_getValue() * 5;
+	voltage = voltage / 1024;
+	voltage -= 0.5;
+	double temp = voltage * 100;
+	return temp;
+}
