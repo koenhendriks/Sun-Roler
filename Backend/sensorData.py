@@ -59,6 +59,8 @@ class SD:
     def send_data(self, data):
         """ Send data to serial device.
 
+        Encode the data to bytes.
+
         Args:
             data: The data to send to the serial device.
 
