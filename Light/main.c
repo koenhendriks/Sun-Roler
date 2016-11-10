@@ -240,10 +240,12 @@ char centralUnitConnected = 0;
 // This is for Celcius
 //uint8_t lowerLimit = 20;
 //uint8_t upperLimit = 25;
+//uint8_t sensor_id = 3;
 
 // This is for Lux
 uint16_t lowerLimit = 200;
 uint16_t upperLimit = 300;
+uint8_t sensor_id = 5;
 
 
 ISR (TIMER1_OVF_vect)
@@ -297,9 +299,8 @@ void checkLux(){
 * Afterwards it resets 'totalLux'
 */
 void sendDataOrChangeScreen(){
-	if (centralUnitConnected){
-		uart_transmit_value(10, (totalLux/2));
-	} else {
+	uart_transmit_value(sensor_id, (totalLux/2));
+	if (!centralUnitConnected){
 		if (totalLux/2 > upperLimit)
 		{
 			changeScreen(30);
@@ -359,7 +360,7 @@ void changeScreen(uint8_t change){
 			_delay_ms(250);
 			PORTB = PORTB & ~_BV(PINB1);
 			_delay_ms(250);
-			TMI1638_writeNumber(getDistance());
+			//TMI1638_writeNumber(getDistance());
 		}
 		return;
 	} else if (change < getDistance()){
@@ -369,7 +370,7 @@ void changeScreen(uint8_t change){
 			_delay_ms(250);
 			PORTB = PORTB & ~_BV(PINB1);
 			_delay_ms(250);
-			TMI1638_writeNumber(getDistance());
+			//TMI1638_writeNumber(getDistance());
 					
 		}
 		return;
@@ -379,15 +380,19 @@ void changeScreen(uint8_t change){
 }
 
 void checkData(){
-	if (uart_check_receivebuffer() == 1){
+	//if (uart_check_receivebuffer() == 1){
 		uint8_t frame = uart_receive();
+		TMI1638_writeNumber(frame);
 		if (frame > 0){
+			PORTB = PORTB | _BV(PINB0);
+			PORTB = PORTB | _BV(PINB1);
+			PORTB = PORTB | _BV(PINB2);
 			centralUnit_counter = 255;
 			if (frame < 255){
 				changeScreen(frame);
 			}
 		}
-	}
+	//}
 }
 
 /*
@@ -412,7 +417,7 @@ void checkCentralUnit(){
 
 // This isn't needed probably
 void printDistance(){
-	TMI1638_writeNumber(getDistance());
+	//TMI1638_writeNumber(getDistance());
 }
 
 int main()
@@ -421,7 +426,7 @@ int main()
 	uart_init();
 	initLED();
 	TMI1638_setup();
-	TMI1638_writeNumber(10);
+	TMI1638_writeNumber(3);
 	HCSR04_init();
  	SCH_Init_T0();
 	 
