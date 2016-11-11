@@ -62,7 +62,13 @@ class DB:
         """
         conn, c = self.open()
 
-        sensors = {1: 'anemometer', 2: 'rain', 3: 'temperature', 4: 'humidity', 5: 'light'}
+        # Specify sensor identification, name, default minimal value and default maximum value.
+        sensors = {1: ['anemometer', 0, 0],
+                   2: ['rain', 0, 0],
+                   3: ['temperature', 0, 0],
+                   4: ['humidity', 0, 0],
+                   5: ['light', 0, 0]}
+
         c.execute("CREATE TABLE {tn} ({id_fn} {id_ft}, {s_fn} {s_ft}, {s_n_fn} {s_n_ft}, {s_v_fn} {s_v_ft})"
                   .format(tn='sensor_settings',
                           id_fn='ID', id_ft='INTEGER PRIMARY KEY AUTOINCREMENT',
@@ -76,30 +82,32 @@ class DB:
                           m_fn='message', m_ft='TEXT',
                           t_fn='log_time', t_ft='INTEGER'))
 
+        # Default roll in distance
         insert_values = (0, 'roll_in_distance', 10)
         c.execute("INSERT INTO sensor_settings (sensor, setting_name, setting_value) VALUES (?, ?, ?)",
                   insert_values)
 
+        # Default roll out distance
         insert_values = (0, 'roll_out_distance', 40)
         c.execute("INSERT INTO sensor_settings (sensor, setting_name, setting_value) VALUES (?, ?, ?)",
                   insert_values)
 
         for key, value in sensors.items():
             c.execute("CREATE TABLE {tn} ({id_fn} {id_ft}, {sv_fn} {sv_ft}, {rt_fn} {rt_ft})"
-                      .format(tn=value,
+                      .format(tn=value[0],
                               id_fn='ID', id_ft='INTEGER PRIMARY KEY AUTOINCREMENT',
                               sv_fn='sensor_value', sv_ft='INTEGER',
                               rt_fn='reading_time', rt_ft='INTEGER'))
 
-            insert_values = (key, 'min_value', 0)
+            insert_values = (key, 'sensor_name', value[0])
             c.execute("INSERT INTO sensor_settings (sensor, setting_name, setting_value) VALUES (?, ?, ?)",
                       insert_values)
 
-            insert_values = (key, 'max_value', 0)
+            insert_values = (key, 'min_value', value[1])
             c.execute("INSERT INTO sensor_settings (sensor, setting_name, setting_value) VALUES (?, ?, ?)",
                       insert_values)
 
-            insert_values = (key, 'sensor_name', value)
+            insert_values = (key, 'max_value', value[2])
             c.execute("INSERT INTO sensor_settings (sensor, setting_name, setting_value) VALUES (?, ?, ?)",
                       insert_values)
 
@@ -179,7 +187,7 @@ class DB:
         self.close(conn)
         return fetched_rows
 
-    def delete_sensor_value(self, sensor_name, start_time, end_time=''):
+    def delete_sensor_values(self, sensor_name, start_time, end_time=''):
         """ Delete sensor values from database.
 
         Args:
@@ -251,6 +259,24 @@ class DB:
         conn, c = self.open()
         insert_values = (message, int(time.time()))
         c.execute("INSERT INTO log (message, log_time) VALUES (?, ?)", insert_values)
+        self.close(conn)
+
+    def delete_log_messages(self, start_time, end_time=''):
+        """ Delete log messages from database.
+
+        Args:
+            start_time: Left boundary from time period to delete values from.
+            end_time: Right boundary from time period to delete values from.
+
+        """
+
+        # Check if end_time is given or not.
+        if not end_time:
+            end_time = "''"
+
+        conn, c = self.open()
+        c.execute("DELETE FROM log WHERE log_time BETWEEN {ts} AND {te}".format(
+            ts=start_time, te=end_time))
         self.close(conn)
 
     def select_log_messages(self):

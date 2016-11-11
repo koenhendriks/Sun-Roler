@@ -1,7 +1,6 @@
 from serial import SerialTimeoutException
-
-from Backend.database import *
-from Backend.serialCom import *
+from Backend.database import DB
+from Backend.serialCom import SC
 
 
 class SD:
@@ -93,7 +92,3 @@ class SD:
             self.send_data(int(roll_in_distance[0]['setting_value']))
         elif roll_out >= 1:
             self.send_data(int(roll_out_distance[0]['setting_value']))
-
-sd = SD("COM4", 19200, 0)
-sd.read_data()
-

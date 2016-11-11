@@ -1,7 +1,6 @@
 import serial
 from serial import SerialException
-
-from Backend.database import *
+from Backend.database import DB
 
 
 class SC:
