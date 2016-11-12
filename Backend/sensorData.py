@@ -83,7 +83,6 @@ class SD:
             sensor_id: The ID of the sensor of which to control the sunscreens of.
 
         """
-
         roll_out_distance = self.db.select_sensor_setting(0, "roll_out_distance")
         roll_in_distance = self.db.select_sensor_setting(0, "roll_in_distance")
 
@@ -108,7 +107,6 @@ class SD:
             (zero is roll in and one is roll out)
 
         """
-
         roll_out_distance = self.db.select_sensor_setting(0, "roll_out_distance")
         roll_in_distance = self.db.select_sensor_setting(0, "roll_in_distance")
 

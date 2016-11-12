@@ -57,9 +57,16 @@ class DB:
         Args:
             conn: Database connection object.
 
+        Raises:
+            500: DatabaseError was raised. return error 500
+
         """
-        conn.commit()
-        conn.close()
+        try:
+            conn.commit()
+            conn.close()
+
+        except DatabaseError:
+            return '500'
 
     def init(self):
         """ Initialize database.
