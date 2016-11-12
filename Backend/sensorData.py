@@ -65,6 +65,9 @@ class SD:
         Args:
             data: The data to send to the serial device.
 
+        Raises:
+            SerialException: Something went wrong during sending data to control unit.
+
         """
         try:
             self.conn.write(data.to_bytes(1, byteorder='big'))
