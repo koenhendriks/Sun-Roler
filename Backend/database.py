@@ -33,15 +33,23 @@ class DB:
     def open(self):
         """ Open a connection with the database.
 
+        Raises:
+            DatabaseError: Something went wrong when opening a database connection.
+
         Returns:
             conn: Database connection object.
             c: Cursor database connection object.
+            500: DatabaseError was raised. return error 500
 
         """
-        conn = sqlite3.connect('control_unit.sqlite3')
-        conn.row_factory = self.json_return
-        c = conn.cursor()
-        return conn, c
+        try:
+            conn = sqlite3.connect('control_unit.sqlite3')
+            conn.row_factory = self.json_return
+            c = conn.cursor()
+            return conn, c
+
+        except DatabaseError:
+            return '500'
 
     def close(self, conn):
         """ Close a connection with the database.
@@ -61,16 +69,15 @@ class DB:
         Insert default roll in and roll out distances.
 
         Raises:
-            DatabaseError: Something went wrong by opening a database connection or manipulating the database.
+            DatabaseError: Something went wrong when manipulating the database.
 
         Returns:
             200: Statements were executed successfully.
             500: DatabaseError was raised. return error 500.
 
         """
+        conn, c = self.open()
         try:
-            conn, c = self.open()
-
             # Specify sensor identification, name, default minimal value and default maximum value.
             sensors = {1: ['anemometer', 0, 0],
                        2: ['rain', 0, 0],
@@ -135,15 +142,15 @@ class DB:
             value: Value of reading to store.
 
         Raises:
-            DatabaseError: Something went wrong by opening a database connection or manipulating the database.
+            DatabaseError: Something went wrong when manipulating the database.
 
         Returns:
             200: Statements were executed successfully.
             500: DatabaseError was raised. return error 500.
 
         """
+        conn, c = self.open()
         try:
-            conn, c = self.open()
             insert_values = (value, int(time.time()))
             c.execute("INSERT INTO {s} (sensor_value, reading_time) VALUES (?, ?)".format(
                 s=sensor_name), insert_values)
@@ -162,7 +169,7 @@ class DB:
             sensor_name: Name of sensor to select value from.
 
         Raises:
-            DatabaseError: Something went wrong by opening a database connection or manipulating the database.
+            DatabaseError: Something went wrong when manipulating the database.
 
         Returns:
             zero: Return sensor_value zero (0) if no rows fetched.
@@ -170,9 +177,8 @@ class DB:
             500: DatabaseError was raised. return error 500.
 
         """
-
+        conn, c = self.open()
         try:
-            conn, c = self.open()
             c.execute("SELECT sensor_value FROM {tn} ORDER BY reading_time DESC LIMIT 1".format(
                 tn=sensor_name))
             fetched_rows = c.fetchall()
@@ -197,20 +203,19 @@ class DB:
             end_time: Right boundary from time period to return values from.
 
         Raises:
-            DatabaseError: Something went wrong by opening a database connection or manipulating the database.
+            DatabaseError: Something went wrong when manipulating the database.
 
         Returns:
             fetched_rows: The fetched rows from the database containing the sensor values.
             500: DatabaseError was raised. return error 500.
 
         """
-
+        conn, c = self.open()
         try:
             # Check if end_time is given or not.
             if not end_time:
                 end_time = "''"
 
-            conn, c = self.open()
             c.execute("SELECT sensor_value FROM {tn} WHERE reading_time BETWEEN {ts} AND {te}".format(
                 tn=sensor_name, ts=start_time, te=end_time))
             fetched_rows = c.fetchall()
@@ -226,16 +231,15 @@ class DB:
         """ Select names and id's from all sensors from database.
 
         Raises:
-            DatabaseError: Something went wrong by opening a database connection or manipulating the database.
+            DatabaseError: Something went wrong when manipulating the database.
 
         Returns:
             fetched_rows: The fetched rows from the database containing the names and the id's of the sensors.
             500: DatabaseError was raised. return error 500.
 
         """
-
+        conn, c = self.open()
         try:
-            conn, c = self.open()
             c.execute("SELECT sensor, setting_value FROM sensor_settings WHERE setting_name = 'sensor_name'")
             fetched_rows = c.fetchall()
             return fetched_rows
@@ -255,19 +259,19 @@ class DB:
             end_time: Right boundary from time period to delete values from.
 
         Raises:
-            DatabaseError: Something went wrong by opening a database connection or manipulating the database.
+            DatabaseError: Something went wrong when manipulating the database.
 
         Returns:
             200: Statements were executed successfully.
             500: DatabaseError was raised. return error 500.
 
         """
+        conn, c = self.open()
         try:
             # Check if end_time is given or not.
             if not end_time:
                 end_time = "''"
 
-            conn, c = self.open()
             c.execute("DELETE FROM {tn} WHERE reading_time BETWEEN {ts} AND {te}".format(
                 tn=sensor_name, ts=start_time, te=end_time))
             return '200'
@@ -286,15 +290,15 @@ class DB:
             setting_name: Name of setting to select value from.
 
         Raises:
-            DatabaseError: Something went wrong by opening a database connection or manipulating the database.
+            DatabaseError: Something went wrong when manipulating the database.
 
         Returns:
             fetched_rows: The fetched rows from the database containing the sensor setting value.
             500: DatabaseError was raised. return error 500.
 
         """
+        conn, c = self.open()
         try:
-            conn, c = self.open()
             c.execute("SELECT setting_value FROM sensor_settings WHERE sensor = {s} AND setting_name = '{sn}'"
                       .format(s=sensor_id, sn=setting_name))
             fetched_rows = c.fetchall()
@@ -315,15 +319,15 @@ class DB:
             setting_value: The value to store.
 
         Raises:
-            DatabaseError: Something went wrong by opening a database connection or manipulating the database.
+            DatabaseError: Something went wrong when manipulating the database.
 
         Returns:
             200: Statements were executed successfully.
             500: DatabaseError was raised. return error 500.
 
         """
+        conn, c = self.open()
         try:
-            conn, c = self.open()
             insert_values = (sensor_id, setting_name, setting_value)
             c.execute("INSERT INTO sensor_settings (sensor, setting_name, setting_value) VALUES (?, ?, ?)",
                       insert_values)
@@ -344,15 +348,15 @@ class DB:
             setting_value: The new value to store.
 
         Raises:
-            DatabaseError: Something went wrong by opening a database connection or manipulating the database.
+            DatabaseError: Something went wrong when manipulating the database.
 
         Returns:
             200: Statements were executed successfully.
             500: DatabaseError was raised. return error 500.
 
         """
+        conn, c = self.open()
         try:
-            conn, c = self.open()
             c.execute("UPDATE sensor_settings SET setting_value = {sv} WHERE setting_name = '{sn}' AND sensor = {s}".format(
                 sv=setting_value, sn=setting_name, s=sensor_id))
             return '200'
@@ -370,15 +374,15 @@ class DB:
             message: Message to insert into database.
 
         Raises:
-            DatabaseError: Something went wrong by opening a database connection or manipulating the database.
+            DatabaseError: Something went wrong when manipulating the database.
 
         Returns:
             200: Statements were executed successfully.
             500: DatabaseError was raised. return error 500.
 
         """
+        conn, c = self.open()
         try:
-            conn, c = self.open()
             insert_values = (message, int(time.time()))
             c.execute("INSERT INTO log (message, log_time) VALUES (?, ?)", insert_values)
             return '200'
@@ -397,19 +401,19 @@ class DB:
             end_time: Right boundary from time period to delete values from.
 
         Raises:
-            DatabaseError: Something went wrong by opening a database connection or manipulating the database.
+            DatabaseError: Something went wrong when manipulating the database.
 
         Returns:
             200: Statements were executed successfully.
             500: DatabaseError was raised. return error 500.
 
         """
+        conn, c = self.open()
         try:
             # Check if end_time is given or not.
             if not end_time:
                 end_time = "''"
 
-            conn, c = self.open()
             c.execute("DELETE FROM log WHERE log_time BETWEEN {ts} AND {te}".format(
                 ts=start_time, te=end_time))
             return '200'
@@ -424,15 +428,15 @@ class DB:
         """ Select all log messages from database.
 
         Raises:
-            DatabaseError: Something went wrong by opening a database connection or manipulating the database.
+            DatabaseError: Something went wrong when manipulating the database.
 
         Returns:
             200: Statements were executed successfully.
             500: DatabaseError was raised. return error 500.
 
         """
+        conn, c = self.open()
         try:
-            conn, c = self.open()
             c.execute("SELECT * FROM log")
             fetched_rows = c.fetchall()
             return fetched_rows
