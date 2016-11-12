@@ -1,4 +1,4 @@
-from serial import SerialTimeoutException
+from serial import SerialException, SerialTimeoutException
 from Backend.database import DB
 from Backend.serialCom import SC
 
@@ -45,11 +45,11 @@ class SD:
                         sensor_id = int(self.frames.pop(0), 16)
                         sensor_value = int(''.join(self.frames), 16)
                         n_select = self.db.select_sensor_setting(sensor_id, 'sensor_name')
-                        name = n_select[0]["setting_value"]
-                        response = self.db.insert_sensor_value(name, sensor_value)
+                        sensor_name = n_select[0]["setting_value"]
+                        response = self.db.insert_sensor_value(sensor_name, sensor_value)
                         if response == '500':
                             self.conn.log("Couldn't insert sensor value")
-                        self.control_sunscreens()
+                        self.control_sunscreen_auto(sensor_id)
                         self.frames.clear()
                 except ValueError:
                     # Some frames are empty. Just continue reading frames when this is the case.
@@ -66,31 +66,50 @@ class SD:
             data: The data to send to the serial device.
 
         """
-        self.conn.write(data.to_bytes(1, byteorder='big'))
+        try:
+            self.conn.write(data.to_bytes(1, byteorder='big'))
 
-    def control_sunscreens(self):
-        """ Check whether sunscreens need to be rolled in or rolled out.
+        except SerialException:
+            self.conn.log("Couldn't control sunscreen.")
+
+    def control_sunscreen_auto(self, sensor_id):
+        """ Check whether sunscreen need to be rolled in or rolled out
+            and send roll in or roll out distance to control unit.
+
+        Args:
+            sensor_id: The ID of the sensor of which to control the sunscreens of.
 
         """
-        roll_in = 0
-        roll_out = 0
+
         roll_out_distance = self.db.select_sensor_setting(0, "roll_out_distance")
         roll_in_distance = self.db.select_sensor_setting(0, "roll_in_distance")
 
-        sensors = self.db.select_sensor_ids_names()
-        for i in range(0, len(sensors)):
-            sensor_id = sensors[i]["sensor"]
-            sensor_name = sensors[i]["setting_value"]
-            last_reading = self.db.select_last_sensor_value(sensor_name)
-            sensor_min_value = self.db.select_sensor_setting(sensor_id, "min_value")
-            sensor_max_value = self.db.select_sensor_setting(sensor_id, "max_value")
+        n_select = self.db.select_sensor_setting(sensor_id, 'sensor_name')
+        sensor_name = n_select[0]["setting_value"]
 
-            if last_reading[0]['sensor_value'] < int(sensor_min_value[0]["setting_value"]):
-                roll_in += 1
-            elif last_reading[0]['sensor_value'] > int(sensor_max_value[0]["setting_value"]):
-                roll_out += 1
+        last_reading = self.db.select_last_sensor_value(sensor_name)
 
-        if roll_in == len(sensors):
+        sensor_min_value = self.db.select_sensor_setting(sensor_id, "min_value")
+        sensor_max_value = self.db.select_sensor_setting(sensor_id, "max_value")
+
+        if last_reading[0]['sensor_value'] < int(sensor_min_value[0]["setting_value"]):
             self.send_data(int(roll_in_distance[0]['setting_value']))
-        elif roll_out >= 1:
+        elif last_reading[0]['sensor_value'] > int(sensor_max_value[0]["setting_value"]):
+            self.send_data(int(roll_out_distance[0]['setting_value']))
+
+    def control_sunscreen_manual(self, position):
+        """ Control sunscreen manually.
+
+        Args:
+            position: Indicate whether sunscreen needs to be rolled in or rolled out.
+            (zero is roll in and one is roll out)
+
+        """
+
+        roll_out_distance = self.db.select_sensor_setting(0, "roll_out_distance")
+        roll_in_distance = self.db.select_sensor_setting(0, "roll_in_distance")
+
+        if position == 0:
+            self.send_data(int(roll_in_distance[0]['setting_value']))
+        elif position == 1:
             self.send_data(int(roll_out_distance[0]['setting_value']))
