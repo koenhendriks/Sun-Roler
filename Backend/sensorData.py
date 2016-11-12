@@ -46,7 +46,9 @@ class SD:
                         sensor_value = int(''.join(self.frames), 16)
                         n_select = self.db.select_sensor_setting(sensor_id, 'sensor_name')
                         name = n_select[0]["setting_value"]
-                        self.db.insert_sensor_value(name, sensor_value)
+                        response = self.db.insert_sensor_value(name, sensor_value)
+                        if response == '500':
+                            self.conn.log("Couldn't insert sensor value")
                         self.control_sunscreens()
                         self.frames.clear()
                 except ValueError:

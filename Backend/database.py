@@ -145,7 +145,6 @@ class DB:
             DatabaseError: Something went wrong when manipulating the database.
 
         Returns:
-            200: Statements were executed successfully.
             500: DatabaseError was raised. return error 500.
 
         """
@@ -154,7 +153,6 @@ class DB:
             insert_values = (value, int(time.time()))
             c.execute("INSERT INTO {s} (sensor_value, reading_time) VALUES (?, ?)".format(
                 s=sensor_name), insert_values)
-            return '200'
 
         except DatabaseError:
             return '500'
