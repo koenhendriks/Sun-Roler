@@ -16,7 +16,7 @@ class SD:
 
     """
 
-    def __init__(self, port, baud_rate, timeout):
+    def __init__(self, port, baud_rate, timeout=0):
         """ Initialize class with serial connection object, open the serial connection and and create DB object """
         self.ser = SC(port, baud_rate, timeout=timeout)
         self.conn = self.ser.open()
