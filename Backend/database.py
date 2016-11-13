@@ -134,14 +134,13 @@ class DB:
                 insert_values = (key, 'max_value', value[2])
                 c.execute("INSERT INTO sensor_settings (sensor, setting_name, setting_value) VALUES (?, ?, ?)",
                           insert_values)
+            return '200'
 
         except DatabaseError:
             return '500'
 
         finally:
             self.close(conn)
-
-        return '200'
 
     def insert_sensor_value(self, sensor_id, value, screen_pos):
         """ Insert sensor values in database.
