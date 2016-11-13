@@ -197,7 +197,7 @@ class DB:
                 return fetched_rows
             else:
                 # If no reading found, return zero.
-                return [{'sensor_value': 0}]
+                return [{'sensor_value': 0, 'screen_position': 0}]
 
         except DatabaseError:
             return '500'
