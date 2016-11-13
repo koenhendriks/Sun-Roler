@@ -2,10 +2,6 @@ from serial import SerialException, SerialTimeoutException
 from Backend.database import DB
 from Backend.serialCom import SC
 
-#
-# TODO: create function to determine if sunscreen is rolled in or rolled out.
-#
-
 
 class Control:
     """ Read and write sensor values to and from serial device.
@@ -47,8 +43,12 @@ class Control:
                         self.frames.append(frame.hex())
                     if len(self.frames) == 5:
                         sensor_id = int(self.frames.pop(0), 16)
+                        #
+                        # TODO: create function to determine if sunscreen is rolled in or rolled out.
+                        #
+                        screen_pos = int(self.frames.pop(1), 16)
                         sensor_value = int(''.join(self.frames), 16)
-                        response = self.db.insert_sensor_value(sensor_id, sensor_value)
+                        response = self.db.insert_sensor_value(sensor_id, sensor_value, screen_pos)
                         if response == '500':
                             self.conn.log("Couldn't insert sensor value")
                         self.control_sunscreen_auto(sensor_id)

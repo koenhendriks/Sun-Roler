@@ -116,10 +116,11 @@ class DB:
                       insert_values)
 
             for key, value in sensors.items():
-                c.execute("CREATE TABLE {tn} ({id_fn} {id_ft}, {sv_fn} {sv_ft}, {rt_fn} {rt_ft})"
+                c.execute("CREATE TABLE {tn} ({id_fn} {id_ft}, {sv_fn} {sv_ft}, {sp_fn} {sp_ft}, {rt_fn} {rt_ft})"
                           .format(tn=value[0],
                                   id_fn='ID', id_ft='INTEGER PRIMARY KEY AUTOINCREMENT',
                                   sv_fn='sensor_value', sv_ft='INTEGER',
+                                  sp_fn='screen_position', sp_ft='INTEGER',
                                   rt_fn='reading_time', rt_ft='INTEGER'))
 
                 insert_values = (key, 'sensor_name', value[0])
@@ -133,7 +134,6 @@ class DB:
                 insert_values = (key, 'max_value', value[2])
                 c.execute("INSERT INTO sensor_settings (sensor, setting_name, setting_value) VALUES (?, ?, ?)",
                           insert_values)
-                return '200'
 
         except DatabaseError:
             return '500'
@@ -141,12 +141,15 @@ class DB:
         finally:
             self.close(conn)
 
-    def insert_sensor_value(self, sensor_id, value):
+        return '200'
+
+    def insert_sensor_value(self, sensor_id, value, screen_pos):
         """ Insert sensor values in database.
 
         Args:
             sensor_id: ID of sensor to store value of.
             value: Value of reading to store.
+            screen_pos: The position of the sunscreen.
 
         Raises:
             DatabaseError: Something went wrong when manipulating the database.
@@ -159,8 +162,8 @@ class DB:
         try:
             sensor_name = self.select_sensor_setting(sensor_id, 'sensor_name')
 
-            insert_values = (value, int(time.time()))
-            c.execute("INSERT INTO {s} (sensor_value, reading_time) VALUES (?, ?)".format(
+            insert_values = (value, screen_pos, int(time.time()))
+            c.execute("INSERT INTO {s} (sensor_value, screen_pos, reading_time) VALUES (?, ?, ?)".format(
                 s=sensor_name[0]["setting_value"]), insert_values)
 
         except DatabaseError:
@@ -170,7 +173,7 @@ class DB:
             self.close(conn)
 
     def select_last_sensor_value(self, sensor_id):
-        """ Select last sensor value from database.
+        """ Select last sensor value and last known screen position from database.
 
         Args:
             sensor_id: ID of sensor to select value from.
@@ -188,7 +191,7 @@ class DB:
         try:
             sensor_name = self.select_sensor_setting(sensor_id, 'sensor_name')
 
-            c.execute("SELECT sensor_value FROM {tn} ORDER BY reading_time DESC LIMIT 1".format(
+            c.execute("SELECT sensor_value, screen_position FROM {tn} ORDER BY reading_time DESC LIMIT 1".format(
                 tn=sensor_name[0]["setting_value"]))
             fetched_rows = c.fetchall()
             if fetched_rows:
