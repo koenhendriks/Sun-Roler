@@ -162,7 +162,7 @@ class DB:
             sensor_name = self.select_sensor_setting(sensor_id, 'sensor_name')
 
             insert_values = (value, screen_pos, int(time.time()))
-            c.execute("INSERT INTO {s} (sensor_value, screen_pos, reading_time) VALUES (?, ?, ?)".format(
+            c.execute("INSERT INTO {s} (sensor_value, screen_position, reading_time) VALUES (?, ?, ?)".format(
                 s=sensor_name[0]["setting_value"]), insert_values)
 
         except DatabaseError:
