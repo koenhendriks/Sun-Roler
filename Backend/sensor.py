@@ -2,8 +2,12 @@ from serial import SerialException, SerialTimeoutException
 from Backend.database import DB
 from Backend.serialCom import SC
 
+#
+# TODO: create function to determine if sunscreen is rolled in or rolled out.
+#
 
-class SD:
+
+class Control:
     """ Read and write sensor values to and from serial device.
 
     This class provides functions to read data from a serial device and
@@ -44,9 +48,7 @@ class SD:
                     if len(self.frames) == 5:
                         sensor_id = int(self.frames.pop(0), 16)
                         sensor_value = int(''.join(self.frames), 16)
-                        n_select = self.db.select_sensor_setting(sensor_id, 'sensor_name')
-                        sensor_name = n_select[0]["setting_value"]
-                        response = self.db.insert_sensor_value(sensor_name, sensor_value)
+                        response = self.db.insert_sensor_value(sensor_id, sensor_value)
                         if response == '500':
                             self.conn.log("Couldn't insert sensor value")
                         self.control_sunscreen_auto(sensor_id)
@@ -86,10 +88,7 @@ class SD:
         roll_out_distance = self.db.select_sensor_setting(0, "roll_out_distance")
         roll_in_distance = self.db.select_sensor_setting(0, "roll_in_distance")
 
-        n_select = self.db.select_sensor_setting(sensor_id, 'sensor_name')
-        sensor_name = n_select[0]["setting_value"]
-
-        last_reading = self.db.select_last_sensor_value(sensor_name)
+        last_reading = self.db.select_last_sensor_value(sensor_id)
 
         sensor_min_value = self.db.select_sensor_setting(sensor_id, "min_value")
         sensor_max_value = self.db.select_sensor_setting(sensor_id, "max_value")

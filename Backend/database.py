@@ -141,11 +141,11 @@ class DB:
         finally:
             self.close(conn)
 
-    def insert_sensor_value(self, sensor_name, value):
+    def insert_sensor_value(self, sensor_id, value):
         """ Insert sensor values in database.
 
         Args:
-            sensor_name: Name of sensor to store value of.
+            sensor_id: ID of sensor to store value of.
             value: Value of reading to store.
 
         Raises:
@@ -157,9 +157,11 @@ class DB:
         """
         conn, c = self.open()
         try:
+            sensor_name = self.select_sensor_setting(sensor_id, 'sensor_name')
+
             insert_values = (value, int(time.time()))
             c.execute("INSERT INTO {s} (sensor_value, reading_time) VALUES (?, ?)".format(
-                s=sensor_name), insert_values)
+                s=sensor_name[0]["setting_value"]), insert_values)
 
         except DatabaseError:
             return '500'
@@ -167,11 +169,11 @@ class DB:
         finally:
             self.close(conn)
 
-    def select_last_sensor_value(self, sensor_name):
+    def select_last_sensor_value(self, sensor_id):
         """ Select last sensor value from database.
 
         Args:
-            sensor_name: Name of sensor to select value from.
+            sensor_id: ID of sensor to select value from.
 
         Raises:
             DatabaseError: Something went wrong when manipulating the database.
@@ -184,8 +186,10 @@ class DB:
         """
         conn, c = self.open()
         try:
+            sensor_name = self.select_sensor_setting(sensor_id, 'sensor_name')
+
             c.execute("SELECT sensor_value FROM {tn} ORDER BY reading_time DESC LIMIT 1".format(
-                tn=sensor_name))
+                tn=sensor_name[0]["setting_value"]))
             fetched_rows = c.fetchall()
             if fetched_rows:
                 return fetched_rows
@@ -199,11 +203,11 @@ class DB:
         finally:
             self.close(conn)
 
-    def select_sensor_values(self, sensor_name, start_time, end_time=''):
+    def select_sensor_values(self, sensor_id, start_time, end_time=''):
         """ Select sensor values from database.
 
         Args:
-            sensor_name: Name of sensor to select values from.
+            sensor_id: ID of sensor to select values from.
             start_time: Left boundary from time period to return values from.
             end_time: Right boundary from time period to return values from.
 
@@ -221,8 +225,10 @@ class DB:
             if not end_time:
                 end_time = "''"
 
+            sensor_name = self.select_sensor_setting(sensor_id, 'sensor_name')
+
             c.execute("SELECT sensor_value FROM {tn} WHERE reading_time BETWEEN {ts} AND {te}".format(
-                tn=sensor_name, ts=start_time, te=end_time))
+                tn=sensor_name[0]["setting_value"], ts=start_time, te=end_time))
             fetched_rows = c.fetchall()
             return fetched_rows
 
@@ -255,11 +261,11 @@ class DB:
         finally:
             self.close(conn)
 
-    def delete_sensor_values(self, sensor_name, start_time, end_time=''):
+    def delete_sensor_values(self, sensor_id, start_time, end_time=''):
         """ Delete sensor values from database.
 
         Args:
-            sensor_name: Name of sensor to delete values from.
+            sensor_id: ID of sensor to delete values from.
             start_time: Left boundary from time period to delete values from.
             end_time: Right boundary from time period to delete values from.
 
@@ -277,8 +283,10 @@ class DB:
             if not end_time:
                 end_time = "''"
 
+            sensor_name = self.select_sensor_setting(sensor_id, 'sensor_name')
+
             c.execute("DELETE FROM {tn} WHERE reading_time BETWEEN {ts} AND {te}".format(
-                tn=sensor_name, ts=start_time, te=end_time))
+                tn=sensor_name[0]["setting_value"], ts=start_time, te=end_time))
             return '200'
 
         except DatabaseError:
