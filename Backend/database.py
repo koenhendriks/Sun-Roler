@@ -88,9 +88,9 @@ class DB:
             # Specify sensor identification, name, default minimal value and default maximum value.
             sensors = {1: ['anemometer', 0, 0],
                        2: ['rain', 0, 0],
-                       3: ['temperature', 0, 0],
+                       3: ['temperature', 20, 25],
                        4: ['humidity', 0, 0],
-                       5: ['light', 0, 0]}
+                       5: ['light', 150, 250]}
 
             c.execute("CREATE TABLE {tn} ({id_fn} {id_ft}, {s_fn} {s_ft}, {s_n_fn} {s_n_ft}, {s_v_fn} {s_v_ft})"
                       .format(tn='sensor_settings',
@@ -111,7 +111,7 @@ class DB:
                       insert_values)
 
             # Default roll out distance
-            insert_values = (0, 'roll_out_distance', 40)
+            insert_values = (0, 'roll_out_distance', 30)
             c.execute("INSERT INTO sensor_settings (sensor, setting_name, setting_value) VALUES (?, ?, ?)",
                       insert_values)
 

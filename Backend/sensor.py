@@ -16,7 +16,7 @@ class Control:
 
     """
 
-    def __init__(self, port, baud_rate, timeout=0):
+    def __init__(self, port, baud_rate=19200, timeout=0):
         """ Initialize class with serial connection object, open the serial connection and and create DB object """
         self.ser = SC(port, baud_rate, timeout=timeout)
         self.conn = self.ser.open()
@@ -35,29 +35,25 @@ class Control:
             SerialTimeoutException: A timeout has occurred during read of serial port.
 
         """
-        while 1:
+        try:
+            frame = self.conn.read()
             try:
-                frame = self.conn.read()
-                try:
-                    if frame.hex() != '':
-                        self.frames.append(frame.hex())
-                    if len(self.frames) == 5:
-                        sensor_id = int(self.frames.pop(0), 16)
-                        #
-                        # TODO: create function to determine if sunscreen is rolled in or rolled out.
-                        #
-                        screen_pos = int(self.frames.pop(1), 16)
-                        sensor_value = int(''.join(self.frames), 16)
-                        response = self.db.insert_sensor_value(sensor_id, sensor_value, screen_pos)
-                        if response == '500':
-                            self.conn.log("Couldn't insert sensor value")
-                        self.control_sunscreen_auto(sensor_id)
-                        self.frames.clear()
-                except ValueError:
-                    # Some frames are empty. Just continue reading frames when this is the case.
-                    pass
-            except SerialTimeoutException:
-                self.conn.log('Timeout has occurred during read of serial port.')
+                if frame.hex() != '':
+                    self.frames.append(frame.hex())
+                if len(self.frames) == 6:
+                    sensor_id = int(self.frames.pop(0), 16)
+                    screen_pos = int(self.frames.pop(0), 16)
+                    sensor_value = int(''.join(self.frames), 16)
+                    response = self.db.insert_sensor_value(sensor_id, sensor_value, screen_pos)
+                    if response == '500':
+                        self.conn.log("Couldn't insert sensor value")
+                    self.control_sunscreen_auto(sensor_id)
+                    self.frames.clear()
+            except ValueError:
+                # Some frames are empty. Just continue reading frames when this is the case.
+                pass
+        except SerialTimeoutException:
+            self.conn.log('Timeout has occurred during read of serial port.')
 
     def send_data(self, data):
         """ Send data to serial device.
@@ -94,9 +90,15 @@ class Control:
         sensor_max_value = self.db.select_sensor_setting(sensor_id, "max_value")
 
         if last_reading[0]['sensor_value'] < int(sensor_min_value[0]["setting_value"]):
-            self.send_data(int(roll_in_distance[0]['setting_value']))
+            if last_reading[0]['screen_position'] == 0:
+                self.send_data(255)
+            else:
+                self.send_data(int(roll_in_distance[0]['setting_value']))
         elif last_reading[0]['sensor_value'] > int(sensor_max_value[0]["setting_value"]):
-            self.send_data(int(roll_out_distance[0]['setting_value']))
+            if last_reading[0]['screen_position'] == 1:
+                self.send_data(255)
+            else:
+                self.send_data(int(roll_out_distance[0]['setting_value']))
 
     def control_sunscreen_manual(self, position):
         """ Control sunscreen manually.
@@ -113,3 +115,13 @@ class Control:
             self.send_data(int(roll_in_distance[0]['setting_value']))
         elif position == 1:
             self.send_data(int(roll_out_distance[0]['setting_value']))
+
+
+if __name__ == '__main__':
+    # Open connections to sensors.
+    s1 = Control("COM3")
+    s2 = Control("COM4")
+
+    while 1:
+        s1.read_data()
+        s2.read_data()
