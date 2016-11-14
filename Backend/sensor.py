@@ -4,10 +4,10 @@ from Backend.serialCom import SC
 
 
 class Control:
-    """ Read and write sensor values to and from serial device.
+    """ Read and write sensor values to and from control unit.
 
-    This class provides functions to read data from a serial device and
-    to send data to a serial device.
+    This class provides functions to read data from a control unit and
+    to send data to a control unit.
 
     Attributes:
         port: The port to use to connect to the device.
@@ -24,15 +24,15 @@ class Control:
         self.db = DB()
 
     def read_data(self):
-        """ Read data from the serial device.
+        """ Read data from the control unit.
 
         Data is split up in frames. The frames are being put in a list.
-        When five frames are received, extract sensor ID and sensor values from list and convert to integers.
-        Insert received values in database.
+        When five frames are received, extract sensor ID, sunscreen position and sensor values from list
+        and convert to integers. Insert received values in database.
 
         Raises:
-            ValueError: There has not been any data send from the serial device.
-            SerialTimeoutException: A timeout has occurred during read of serial port.
+            ValueError: There has not been any data send from the control unit.
+            SerialTimeoutException: A timeout has occurred during reading of the serial port.
 
         """
         try:
@@ -45,7 +45,7 @@ class Control:
                     screen_pos = int(self.frames.pop(0), 16)
                     sensor_value = int(''.join(self.frames), 16)
                     response = self.db.insert_sensor_value(sensor_id, sensor_value, screen_pos)
-                    if response == '500':
+                    if response == 500:
                         self.conn.log("Couldn't insert sensor value")
                     self.control_sunscreen_auto(sensor_id)
                     self.frames.clear()
@@ -56,15 +56,15 @@ class Control:
             self.conn.log('Timeout has occurred during read of serial port.')
 
     def send_data(self, data):
-        """ Send data to serial device.
+        """ Send data to control unit.
 
-        Encode the data to bytes.
+        Encode the data to bytes and send the data to the control unit.
 
         Args:
-            data: The data to send to the serial device.
+            data: The data to send to the control unit.
 
         Raises:
-            SerialException: Something went wrong during sending data to control unit.
+            SerialException: Something went wrong during the transfer of data to control unit.
 
         """
         try:
@@ -115,7 +115,6 @@ class Control:
             self.send_data(int(roll_in_distance[0]['setting_value']))
         elif position == 1:
             self.send_data(int(roll_out_distance[0]['setting_value']))
-
 
 if __name__ == '__main__':
     # Open connections to sensors.

@@ -7,7 +7,7 @@ class DB:
     """ Open and close connection with database and manipulate tables and rows in database.
 
     This class provides functions to open and close a database connection, to insert, select
-    and delete sensor values and to insert log messages into the database.
+    and delete sensor values, settings and log messages.
 
     """
 
@@ -39,7 +39,7 @@ class DB:
         Returns:
             conn: Database connection object.
             c: Cursor database connection object.
-            500: DatabaseError was raised. return error 500
+            500: DatabaseError was raised.
 
         """
         try:
@@ -58,7 +58,7 @@ class DB:
             conn: Database connection object.
 
         Raises:
-            500: DatabaseError was raised. return error 500
+            500: DatabaseError was raised.
 
         """
         try:
@@ -73,14 +73,14 @@ class DB:
 
         Create tables to be able to store log messages, sensor settings and sensor values.
         Insert specified sensor names in table 'sensor_settings' to be able to store sensor settings.
-        Insert default roll in and roll out distances.
+        Insert default roll in and roll out distances and default values for sensor settings.
 
         Raises:
             DatabaseError: Something went wrong when manipulating the database.
 
         Returns:
             200: Statements were executed successfully.
-            500: DatabaseError was raised. return error 500.
+            500: DatabaseError was raised.
 
         """
         conn, c = self.open()
@@ -154,7 +154,8 @@ class DB:
             DatabaseError: Something went wrong when manipulating the database.
 
         Returns:
-            500: DatabaseError was raised. return error 500.
+            200: Statements were executed successfully.
+            500: DatabaseError was raised
 
         """
         conn, c = self.open()
@@ -164,6 +165,7 @@ class DB:
             insert_values = (value, screen_pos, int(time.time()))
             c.execute("INSERT INTO {s} (sensor_value, screen_position, reading_time) VALUES (?, ?, ?)".format(
                 s=sensor_name[0]["setting_value"]), insert_values)
+            return '200'
 
         except DatabaseError:
             return '500'
@@ -181,9 +183,9 @@ class DB:
             DatabaseError: Something went wrong when manipulating the database.
 
         Returns:
-            zero: Return sensor_value zero (0) if no rows fetched.
-            fetched_rows: The fetched rows from the database containing the sensor value.
-            500: DatabaseError was raised. return error 500.
+            zero: Return sensor_value and screen_position zero (0) if no rows fetched.
+            fetched_rows: The fetched rows from the database containing the sensor value and screen position.
+            500: DatabaseError was raised
 
         """
         conn, c = self.open()
@@ -218,7 +220,7 @@ class DB:
 
         Returns:
             fetched_rows: The fetched rows from the database containing the sensor values.
-            500: DatabaseError was raised. return error 500.
+            500: DatabaseError was raised.
 
         """
         conn, c = self.open()
@@ -241,14 +243,14 @@ class DB:
             self.close(conn)
 
     def select_sensor_ids_names(self):
-        """ Select names and id's from all sensors from database.
+        """ Select names and ID's from all sensors from database.
 
         Raises:
             DatabaseError: Something went wrong when manipulating the database.
 
         Returns:
-            fetched_rows: The fetched rows from the database containing the names and the id's of the sensors.
-            500: DatabaseError was raised. return error 500.
+            fetched_rows: The fetched rows from the database containing the names and the ID's of the sensors.
+            500: DatabaseError was raised
 
         """
         conn, c = self.open()
@@ -276,7 +278,7 @@ class DB:
 
         Returns:
             200: Statements were executed successfully.
-            500: DatabaseError was raised. return error 500.
+            500: DatabaseError was raised
 
         """
         conn, c = self.open()
@@ -309,7 +311,7 @@ class DB:
 
         Returns:
             fetched_rows: The fetched rows from the database containing the sensor setting value.
-            500: DatabaseError was raised. return error 500.
+            500: DatabaseError was raised
 
         """
         conn, c = self.open()
@@ -318,35 +320,6 @@ class DB:
                       .format(s=sensor_id, sn=setting_name))
             fetched_rows = c.fetchall()
             return fetched_rows
-
-        except DatabaseError:
-            return '500'
-
-        finally:
-            self.close(conn)
-
-    def insert_sensor_setting(self, sensor_id, setting_name, setting_value):
-        """ Insert setting into sensor_setting table.
-
-        Args:
-            sensor_id: ID of sensor.
-            setting_name: Name of setting to select value from.
-            setting_value: The value to store.
-
-        Raises:
-            DatabaseError: Something went wrong when manipulating the database.
-
-        Returns:
-            200: Statements were executed successfully.
-            500: DatabaseError was raised. return error 500.
-
-        """
-        conn, c = self.open()
-        try:
-            insert_values = (sensor_id, setting_name, setting_value)
-            c.execute("INSERT INTO sensor_settings (sensor, setting_name, setting_value) VALUES (?, ?, ?)",
-                      insert_values)
-            return '200'
 
         except DatabaseError:
             return '500'
@@ -367,7 +340,7 @@ class DB:
 
         Returns:
             200: Statements were executed successfully.
-            500: DatabaseError was raised. return error 500.
+            500: DatabaseError was raised
 
         """
         conn, c = self.open()
@@ -393,7 +366,7 @@ class DB:
 
         Returns:
             200: Statements were executed successfully.
-            500: DatabaseError was raised. return error 500.
+            500: DatabaseError was raised.
 
         """
         conn, c = self.open()
@@ -420,7 +393,7 @@ class DB:
 
         Returns:
             200: Statements were executed successfully.
-            500: DatabaseError was raised. return error 500.
+            500: DatabaseError was raised.
 
         """
         conn, c = self.open()
@@ -447,7 +420,7 @@ class DB:
 
         Returns:
             200: Statements were executed successfully.
-            500: DatabaseError was raised. return error 500.
+            500: DatabaseError was raised..
 
         """
         conn, c = self.open()
