@@ -44,9 +44,7 @@ class Control:
                     sensor_id = int(self.frames.pop(0), 16)
                     screen_pos = int(self.frames.pop(0), 16)
                     sensor_value = int(''.join(self.frames), 16)
-                    response = self.db.insert_sensor_value(sensor_id, sensor_value, screen_pos)
-                    if response == 500:
-                        self.conn.log("Couldn't insert sensor value")
+                    self.db.insert_sensor_value(sensor_id, sensor_value, screen_pos)
                     self.control_sunscreen_auto(sensor_id)
                     self.frames.clear()
             except ValueError:
@@ -89,16 +87,16 @@ class Control:
         sensor_min_value = self.db.select_sensor_setting(sensor_id, "min_value")
         sensor_max_value = self.db.select_sensor_setting(sensor_id, "max_value")
 
-        if last_reading[0]['sensor_value'] < int(sensor_min_value[0]["setting_value"]):
-            if last_reading[0]['screen_position'] == 0:
+        if last_reading[0] < int(sensor_min_value[0]):
+            if last_reading[1] == 0:
                 self.send_data(255)
             else:
-                self.send_data(int(roll_in_distance[0]['setting_value']))
-        elif last_reading[0]['sensor_value'] > int(sensor_max_value[0]["setting_value"]):
-            if last_reading[0]['screen_position'] == 1:
+                self.send_data(int(roll_in_distance[0]))
+        elif last_reading[0] > int(sensor_max_value[0]):
+            if last_reading[1] == 1:
                 self.send_data(255)
             else:
-                self.send_data(int(roll_out_distance[0]['setting_value']))
+                self.send_data(int(roll_out_distance[0]))
 
     def control_sunscreen_manual(self, position):
         """ Control sunscreen manually.
@@ -112,9 +110,9 @@ class Control:
         roll_in_distance = self.db.select_sensor_setting(0, "roll_in_distance")
 
         if position == 0:
-            self.send_data(int(roll_in_distance[0]['setting_value']))
+            self.send_data(int(roll_in_distance[0]))
         elif position == 1:
-            self.send_data(int(roll_out_distance[0]['setting_value']))
+            self.send_data(int(roll_out_distance[0]))
 
 if __name__ == '__main__':
     # Open connections to sensors.
