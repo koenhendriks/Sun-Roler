@@ -4,7 +4,7 @@ from django.db import models
 # Create your models here.
 
 class Anemometer(models.Model):
-    db_table = '"anemometer"'
+    db_table = 'anemometer'
     ID = models.IntegerField(primary_key=True)
     sensor_value = models.IntegerField()
     screen_position = models.IntegerField()
@@ -12,7 +12,7 @@ class Anemometer(models.Model):
 
 
 class Humidity(models.Model):
-    db_table = '"humidity"'
+    db_table = 'humidity'
     ID = models.IntegerField(primary_key=True)
     sensor_value = models.IntegerField()
     screen_position = models.IntegerField()
@@ -20,7 +20,7 @@ class Humidity(models.Model):
 
 
 class Light(models.Model):
-    db_table = '"light"'
+    db_table = 'light'
     ID = models.IntegerField(primary_key=True)
     sensor_value = models.IntegerField()
     screen_position = models.IntegerField()
@@ -28,7 +28,7 @@ class Light(models.Model):
 
 
 class Rain(models.Model):
-    db_table = '"rain"'
+    db_table = 'rain'
     ID = models.IntegerField(primary_key=True)
     sensor_value = models.IntegerField()
     screen_position = models.IntegerField()
@@ -36,7 +36,7 @@ class Rain(models.Model):
 
 
 class Temperature(models.Model):
-    db_table = '"temperature"'
+    db_table = 'temperature'
     ID = models.IntegerField(primary_key=True)
     sensor_value = models.IntegerField()
     screen_position = models.IntegerField()
@@ -44,14 +44,14 @@ class Temperature(models.Model):
 
 
 class Log(models.Model):
-    db_table = '"log"'
+    db_table = 'log'
     ID = models.IntegerField(primary_key=True)
     message = models.TextField()
     log_time = models.IntegerField()
 
 
 class SensorSettings(models.Model):
-    db_table = '"sensor_settings"'
+    db_table = 'sensor_settings'
     ID = models.IntegerField(primary_key=True)
     sensor = models.IntegerField()
     setting_name = models.TextField()
