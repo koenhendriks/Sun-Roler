@@ -42,11 +42,13 @@ class Temperature(models.Model):
     screen_position = models.IntegerField()
     reading_time = models.IntegerField()
 
+
 class Log(models.Model):
     db_table = '"log"'
     ID = models.IntegerField(primary_key=True)
     message = models.TextField()
     log_time = models.IntegerField()
+
 
 class SensorSettings(models.Model):
     db_table = '"sensor_settings"'
