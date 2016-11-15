@@ -18,7 +18,7 @@ class DB:
             c: Cursor database connection object.
 
         """
-        conn = sqlite3.connect('control_unit.sqlite3')
+        conn = sqlite3.connect('../Central/db.sqlite3')
         c = conn.cursor()
         return conn, c
 
