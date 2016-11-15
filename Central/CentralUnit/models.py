@@ -13,7 +13,7 @@ class Anemometer(models.Model):
     reading_time = models.IntegerField()
 
     def __str__(self):
-        return str(self.sensor_value)+'℃ at '+str(self.reading_time)
+        return str(self.sensor_value)+' at '+str(self.reading_time)
 
 
 class Humidity(models.Model):
@@ -65,7 +65,7 @@ class Temperature(models.Model):
     reading_time = models.IntegerField()
 
     def __str__(self):
-        return str(self.sensor_value)+' at '+str(self.reading_time)
+        return str(self.sensor_value)+'℃ at '+str(self.reading_time)
 
 
 class Log(models.Model):
