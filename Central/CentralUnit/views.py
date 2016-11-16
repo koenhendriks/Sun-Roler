@@ -1,6 +1,8 @@
+import datetime
 from django.http import JsonResponse
 from django.shortcuts import render
 from .models import Temperature, Light
+
 
 
 def index(request):
@@ -16,9 +18,15 @@ def index(request):
 def sensors(request):
     latest_temps = Temperature.objects.order_by('-reading_time')[:5]
     current_temperature = [t.sensor_value for t in latest_temps][0]
-    history_temperature = list()
+    history_temperature_y = list()
+    history_temperature_x = list()
     for t in latest_temps:
-        history_temperature.append(t.sensor_value)
+        history_temperature_y.append(t.sensor_value)
+        history_temperature_x.append(
+            datetime.datetime.fromtimestamp(
+                int(t.reading_time)
+            ).strftime('%H:%M')
+        )
 
     temperature_motor = 'up'
     if [t.screen_position for t in latest_temps][0] == 1:
@@ -26,9 +34,15 @@ def sensors(request):
 
     latest_lights = Light.objects.order_by('-reading_time')[:5]
     current_light = [l.sensor_value for l in latest_lights][0]
-    history_lights = list()
+    history_lights_y = list()
+    history_lights_x = list()
     for l in latest_lights:
-        history_lights.append(l.sensor_value)
+        history_lights_y.append(l.sensor_value)
+        history_lights_x.append(
+            datetime.datetime.fromtimestamp(
+                int(l.reading_time)
+            ).strftime('%H:%M')
+        )
 
     light_motor = 'up'
     if [l.screen_position for l in latest_lights][0] == 1:
@@ -37,8 +51,10 @@ def sensors(request):
     return JsonResponse({
         'light': current_light,
         'light_motor': light_motor,
-        'history_lights': history_temperature,
+        'history_lights_y': history_lights_y,
+        'history_lights_x': history_lights_x,
         'temperature': current_temperature,
         'temperature_motor': temperature_motor,
-        'history_temperature': history_temperature
+        'history_temperature_y': history_temperature_y,
+        'history_temperature_x': history_temperature_x
     })
