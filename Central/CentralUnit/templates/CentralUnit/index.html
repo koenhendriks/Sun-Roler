@@ -7,20 +7,12 @@
 <!-- Slider main container -->
 <div class="swiper-container swiper-container-h">
     <div class="swiper-wrapper">
+        {% include "./slides/rolling.html" %}
 
         {% include "./slides/temperature.html %}
 
         {% include "./slides/light.html" %}
 
-        <div class="swiper-slide">
-            <div class="row">
-                <div class="col-xs-12">
-                    <div class="row">
-                        <div class="col-xs-12"><p class="text-center">Hier komt info over een sensoor ofzo</p></div>
-                    </div>
-                </div>
-            </div>
-        </div>
     </div>
 </div>
 
@@ -64,6 +56,15 @@
                 lightChart.xAxis[0].setCategories(data.history_lights_x.reverse());
             });
         }, 3000);
+
+        $('.minus').click(function(){
+
+
+        });
+
+        $('.plus').click(function(){
+
+        });
     });
 
 
