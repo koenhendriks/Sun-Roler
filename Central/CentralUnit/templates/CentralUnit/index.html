@@ -1,0 +1,84 @@
+{% extends "./template.html" %}
+
+{% block title %}{{ section.title }}{% endblock %}
+
+{% block content %}
+
+<!-- Slider main container -->
+<div class="swiper-container swiper-container-h">
+    <div class="swiper-wrapper">
+        {% include "./slides/temperature.html %}
+
+        {% include "./slides/light.html" %}
+
+        {% include "./slides/rolling.html" %}
+    </div>
+</div>
+
+{% endblock %}
+{% block script %}
+<script>
+    var swiperH = new Swiper('.swiper-container-h', {
+        pagination: '.swiper-pagination-h',
+        paginationClickable: true,
+        spaceBetween: 50,
+        nextButton: '#h-next-slide',
+        prevButton: '#h-prev-slide'
+    });
+
+    var swiperT = new Swiper('.swiper-container-temperature', {
+        pagination: '.swiper-pagination-temperature',
+        paginationClickable: true,
+        direction: 'vertical',
+        nested: true,
+        spaceBetween: 50
+    });
+
+    var swiperL = new Swiper('.swiper-container-light', {
+        pagination: '.swiper-pagination-light',
+        paginationClickable: true,
+        direction: 'vertical',
+        nested: true,
+        spaceBetween: 50
+    });
+
+    $(document).ready(function () {
+        setInterval(function () {
+            $.get('/sensors', function (data) {
+                $('#light').html(data.light);
+                $('#temperature').html(data.temperature);
+                $('#light-motor').removeClass('glyphicon-arrow-up').removeClass('glyphicon-arrow-down').addClass('glyphicon-arrow-' + data.light_motor);
+                $('#temperature-motor').removeClass('glyphicon-arrow-up').removeClass('glyphicon-arrow-down').addClass('glyphicon-arrow-' + data.temperature_motor);
+                temperatureChart.series[0].setData(data.history_temperature_y.reverse());
+                temperatureChart.xAxis[0].setCategories(data.history_temperature_x.reverse());
+                lightChart.series[0].setData(data.history_lights_y.reverse());
+                lightChart.xAxis[0].setCategories(data.history_lights_x.reverse());
+            });
+        }, 3000);
+
+        $('.minus').click(function () {
+            var input = $(this).siblings('input[type=text]');
+            var state = $(this).attr('data-state');
+            if(parseInt(input.val()) > 0){
+                var minus = parseInt(input.val()) -1;
+                input.val(minus);
+                updateRoll(state)
+            }
+        });
+
+        $('.plus').click(function () {
+            var input = $(this).siblings('input[type=text]');
+            var state = $(this).attr('data-state');
+                var plus = parseInt(input.val()) +1;
+                input.val(plus);
+                updateRoll(state)
+        });
+    });
+
+    function updateRoll(state){
+        $.get('/update/roll'+state+'/'+$('#roll_'+state+'_distance').val())
+    }
+
+
+</script>
+{% endblock %}

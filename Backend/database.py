@@ -18,7 +18,7 @@ class DB:
             c: Cursor database connection object.
 
         """
-        conn = sqlite3.connect('control_unit.sqlite3')
+        conn = sqlite3.connect('../Central/db.sqlite3')
         c = conn.cursor()
         return conn, c
 
@@ -87,6 +87,14 @@ class DB:
                       insert_values)
 
             insert_values = (key, 'max_value', value[2])
+            c.execute("INSERT INTO sensor_settings (sensor, setting_name, setting_value) VALUES (?, ?, ?)",
+                      insert_values)
+
+            insert_values = (key, 'motor_override_up', 0)
+            c.execute("INSERT INTO sensor_settings (sensor, setting_name, setting_value) VALUES (?, ?, ?)",
+                      insert_values)
+
+            insert_values = (key, 'motor_override_down', 0)
             c.execute("INSERT INTO sensor_settings (sensor, setting_name, setting_value) VALUES (?, ?, ?)",
                       insert_values)
 

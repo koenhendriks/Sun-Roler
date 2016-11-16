@@ -1,0 +1,42 @@
+<div class="swiper-slide">
+    <div class="swiper-container swiper-container-temperature">
+        <div class="swiper-wrapper">
+
+            <div class="swiper-slide">
+                <div class="row">
+                    <div class="col-xs-12">
+                        <div class="panel panel-warning">
+                            <div class="panel-heading">
+                                Temperature Sensor
+                            </div>
+                        </div>
+                        <div class="panel panel-info">
+                            <div class="panel-heading panel-full">
+                                <div class="row">
+                                    <div class="col-xs-6">
+                                        <span class="glyphicon glyphicon-sunglasses icon-large"></span>
+                                    </div>
+                                    <div class="col-xs-6">
+                                        <p>Motor Status: <span class="glyphicon glyphicon-arrow-up"></span></p>
+                                        <p>
+                                            Currently:
+                                            <span class="text-large"><br/><span
+                                                    id="temperature">{{ temperature }}</span> &#8451;</span>
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="swiper-slide">
+                <div class="row">
+                    <div class="col-xs-12 text-center" id="temperature-chart"></div>
+                </div>
+            </div>
+        </div>
+        <div class="swiper-pagination swiper-pagination-temperature"></div>
+    </div>
+</div>

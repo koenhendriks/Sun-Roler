@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+{% load static %}
+{% load bootstrap3 %}
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Central Unit</title>
+    {% bootstrap_css %}
+    <link rel="stylesheet" href="{% static 'swiper/css/swiper.min.css' %}">
+    <link rel="stylesheet" href="{% static 'central/main.css' %}">
+</head>
+<body>
+
+<!-- Page Content -->
+<div class="container-fluid">
+
+    {% block content %}
+    {% endblock %}
+
+    {% include './navigation.html' %}
+
+
+</div>
+<!-- /.container -->
+{% bootstrap_javascript %}
+<script src="{% static 'moment/moment.js' %}"></script>
+<script src="{% static 'swiper/js/swiper.jquery.min.js' %}"></script>
+<script src="{% static 'highcharts/highcharts.js' %}"></script>
+<script src="{% static 'central/temperatureCharts.js' %}"></script>
+<script src="{% static 'central/lightCharts.js' %}"></script>
+{% block script %}
+{% endblock %}
+<script>
+    // Find the right method, call on correct element
+//    function launchIntoFullscreen(element) {
+//        if (element.requestFullscreen) {
+//            element.requestFullscreen();
+//        } else if (element.mozRequestFullScreen) {
+//            element.mozRequestFullScreen();
+//        } else if (element.webkitRequestFullscreen) {
+//            element.webkitRequestFullscreen();
+//        } else if (element.msRequestFullscreen) {
+//            element.msRequestFullscreen();
+//        }
+//    }
+//    $(window).on('touch click input DOMChanged', function () {
+//        launchIntoFullscreen(document.documentElement);
+//    });
+
+</script>
+</body>
+</html>

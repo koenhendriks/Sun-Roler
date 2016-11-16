@@ -1,6 +1,6 @@
 from serial import SerialException, SerialTimeoutException
-from Backend.database import DB
-from Backend.serialCom import SC
+from database import DB
+from serialCom import SC
 
 
 class Control:
@@ -17,11 +17,30 @@ class Control:
     """
 
     def __init__(self, port, baud_rate=19200, timeout=0):
-        """ Initialize class with serial connection object, open the serial connection and and create DB object """
+        """ Initialize class with serial connection object, open the serial connection and create DB object """
         self.ser = SC(port, baud_rate, timeout=timeout)
         self.conn = self.ser.open()
+        self.sensor_id = 0
         self.frames = []
         self.db = DB()
+
+    def set_sensor_id(self, sensor_id):
+        """ Set the sensor ID instance variable.
+
+        Args:
+            sensor_id: The ID of the sensor to use in the instance.
+
+        """
+        self.sensor_id = sensor_id
+
+    def get_sensor_id(self):
+        """ Get the sensor ID instance variable.
+
+        Returns:
+            sensor_id: The ID of the sensor used in the instance.
+
+        """
+        return self.sensor_id
 
     def read_data(self):
         """ Read data from the control unit.
@@ -47,6 +66,7 @@ class Control:
                     self.db.insert_sensor_value(sensor_id, sensor_value, screen_pos)
                     self.control_sunscreen_auto(sensor_id)
                     self.frames.clear()
+                    self.set_sensor_id(sensor_id)
             except ValueError:
                 # Some frames are empty. Just continue reading frames when this is the case.
                 pass
@@ -98,27 +118,41 @@ class Control:
             else:
                 self.send_data(int(roll_out_distance[0]))
 
-    def control_sunscreen_manual(self, position):
+    def control_sunscreen_manual(self, sensor_id):
         """ Control sunscreen manually.
 
         Args:
-            position: Indicate whether sunscreen needs to be rolled in or rolled out.
-            (zero is roll in and one is roll out)
+            sensor_id: The ID of the sensor of which to control the sunscreens of.
 
         """
         roll_out_distance = self.db.select_sensor_setting(0, "roll_out_distance")
         roll_in_distance = self.db.select_sensor_setting(0, "roll_in_distance")
 
-        if position == 0:
+        position_up = self.db.select_sensor_setting(sensor_id, "motor_override_up")
+        position_down = self.db.select_sensor_setting(sensor_id, "motor_override_down")
+
+        last_position = self.db.select_last_sensor_value(sensor_id)
+
+        if (position_down[0] == 1) and (last_position[1] == 1):
             self.send_data(int(roll_in_distance[0]))
-        elif position == 1:
+        elif (position_up[0] == 1) and (last_position[1] == 0):
             self.send_data(int(roll_out_distance[0]))
 
 if __name__ == '__main__':
     # Open connections to sensors.
-    s1 = Control("COM3")
-    s2 = Control("COM4")
+    s1 = Control("/dev/ttyUSB0")
+    # s2 = Control("/dev/ttyUSB1")
 
     while 1:
-        s1.read_data()
-        s2.read_data()
+        # Try to make a connection with the sensors and read the data which is being sent.
+        try:
+            s1.read_data()
+            # s2.read_data()
+
+            # Check if user wants to roll in or roll out the sunscreen manually
+            s1.control_sunscreen_manual(s1.get_sensor_id())
+            # s2.control_sunscreen_manual(s2.get_sensor_id())
+
+        # If connection fails, try to connect again.
+        except SerialException:
+            pass

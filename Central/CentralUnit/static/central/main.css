@@ -1,0 +1,64 @@
+html, body{
+    overflow: hidden;
+    width: 320px;
+    height: 240px;
+}
+
+.highcharts-credits{
+    display: none;
+}
+
+.navigation{
+    position: fixed;
+    left: 0;
+    top: 200px;
+    width: 320px;
+    height: 40px;
+    background: #fcf8e3;
+}
+
+.navigation-block{
+    width: 80px;
+    height: 40px;
+    float:left;
+    font-size:35px;
+}
+
+.navigation-block:active{
+    background-color: #d9edf7;
+}
+
+.navigation-block > span {
+    width: 80px;
+    height: 40px;
+}
+
+.right-button{
+    margin-left: 160px;
+}
+
+.panel{
+    margin-bottom: 0 !important;
+}
+
+.panel-full{
+    height: 154px !important;
+}
+
+.icon-large{
+    font-size: 8em;
+}
+
+.text-large{
+    font-size: 2.4em;
+}
+
+.container-fluid, .swiper-container {
+    width: 320px;
+    height: 200px;
+}
+
+html, body, .container-fluid {
+    margin: 0 0 0 0;
+    padding: 0 0 0 0;
+}
