@@ -121,6 +121,9 @@ class Control:
     def control_sunscreen_manual(self, sensor_id):
         """ Control sunscreen manually.
 
+        Args:
+            sensor_id: The ID of the sensor of which to control the sunscreens of.
+
         """
         roll_out_distance = self.db.select_sensor_setting(0, "roll_out_distance")
         roll_in_distance = self.db.select_sensor_setting(0, "roll_in_distance")
