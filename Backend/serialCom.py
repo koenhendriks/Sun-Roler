@@ -7,8 +7,7 @@ class SC:
     """ Create a connection with a serial device on a specified port.
 
     This class provides functions to open and close a connection with a
-    serial device and to log errors occurred during opening and closing
-    a connection and reading and writing values to and from the device.
+    serial device and to log errors occurred during reading and writing values to and from the device.
 
     Attributes:
         port: The port to use to connect to the device.
@@ -32,15 +31,9 @@ class SC:
         Returns:
             Serial object with specified port, baud rate and timeout values.
 
-        Raises:
-            SerialException: an error occurred while opening a serial connection.
-
         """
-        try:
-            ser = serial.Serial(self.port, self.baud_rate, timeout=self.timeout)
-            return ser
-        except SerialException:
-            self.log("An error occurred while opening a serial connection.")
+        ser = serial.Serial(self.port, self.baud_rate, timeout=self.timeout)
+        return ser
 
     def close(self, ser):
         """ Close a serial connection.
