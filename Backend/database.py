@@ -90,6 +90,14 @@ class DB:
             c.execute("INSERT INTO sensor_settings (sensor, setting_name, setting_value) VALUES (?, ?, ?)",
                       insert_values)
 
+            insert_values = (key, 'motor_override_up', 0)
+            c.execute("INSERT INTO sensor_settings (sensor, setting_name, setting_value) VALUES (?, ?, ?)",
+                      insert_values)
+
+            insert_values = (key, 'motor_override_down', 0)
+            c.execute("INSERT INTO sensor_settings (sensor, setting_name, setting_value) VALUES (?, ?, ?)",
+                      insert_values)
+
         self.close(conn)
 
     def insert_sensor_value(self, sensor_id, value, screen_pos):
