@@ -4,6 +4,10 @@ html, body{
     height: 240px;
 }
 
+.highcharts-credits{
+    display: none;
+}
+
 .navigation{
     position: fixed;
     left: 0;
