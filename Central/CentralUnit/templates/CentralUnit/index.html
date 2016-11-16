@@ -51,6 +51,8 @@
             $.get('/sensors', function(data){
                 $('#light').html(data.light);
                 $('#temperature').html(data.temperature);
+                $('#light-motor').removeClass('glyphicon-arrow-up').removeClass('glyphicon-arrow-down').addClass('glyphicon-arrow-'+data.light_motor);
+                $('#temperature-motor').removeClass('glyphicon-arrow-up').removeClass('glyphicon-arrow-down').addClass('glyphicon-arrow-'+data.temperature_motor);
             });
         }, 3000);
     });

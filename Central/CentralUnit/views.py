@@ -16,9 +16,21 @@ def index(request):
 def sensors(request):
     latest_temp = Temperature.objects.order_by('-reading_time')[:1]
     current_temperature = [t.sensor_value for t in latest_temp][0]
+
+    temperature_motor = 'up'
+    if [t.screen_position for t in latest_temp][0] == 1:
+        temperature_motor = 'down'
+
     latest_light = Light.objects.order_by('-reading_time')[:1]
     current_light = [l.sensor_value for l in latest_light][0]
+
+    light_motor = 'up'
+    if [l.screen_position for l in latest_light][0] == 1:
+        light_motor = 'down'
+
     return JsonResponse({
         'light': current_light,
-        'temperature' : current_temperature
+        'light_motor': light_motor,
+        'temperature': current_temperature,
+        'temperature_motor': temperature_motor
     })
