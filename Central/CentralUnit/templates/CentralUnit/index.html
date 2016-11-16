@@ -7,13 +7,10 @@
 <!-- Slider main container -->
 <div class="swiper-container swiper-container-h">
     <div class="swiper-wrapper">
-        {% include "./slides/temperature.html" %}
+
+        {% include "./slides/temperature.html %}
 
         {% include "./slides/light.html" %}
-
-        <div class="swiper-slide">
-            {% include "./slides/v-slide-1.html" %}
-        </div>
 
         <div class="swiper-slide">
             <div class="row">
@@ -29,7 +26,7 @@
 
 {% endblock %}
 {% block script %}
-    <script>
+<script>
     var swiperH = new Swiper('.swiper-container-h', {
         pagination: '.swiper-pagination-h',
         paginationClickable: true,
@@ -38,27 +35,33 @@
         prevButton: '#h-prev-slide'
     });
 
-    var swiperV = new Swiper('.swiper-container-v', {
-        pagination: '.swiper-pagination-v',
+    var swiperT = new Swiper('.swiper-container-temperature', {
+        pagination: '.swiper-pagination-temperature',
         paginationClickable: true,
         direction: 'vertical',
         nested: true,
         spaceBetween: 50
     });
 
-    $(document).ready(function(){
-        setInterval(function(){
-            $.get('/sensors', function(data){
+    var swiperL = new Swiper('.swiper-container-light', {
+        pagination: '.swiper-pagination-light',
+        paginationClickable: true,
+        direction: 'vertical',
+        nested: true,
+        spaceBetween: 50
+    });
+
+    $(document).ready(function () {
+        setInterval(function () {
+            $.get('/sensors', function (data) {
                 $('#light').html(data.light);
                 $('#temperature').html(data.temperature);
-                $('#light-motor').removeClass('glyphicon-arrow-up').removeClass('glyphicon-arrow-down').addClass('glyphicon-arrow-'+data.light_motor);
-                $('#temperature-motor').removeClass('glyphicon-arrow-up').removeClass('glyphicon-arrow-down').addClass('glyphicon-arrow-'+data.temperature_motor);
+                $('#light-motor').removeClass('glyphicon-arrow-up').removeClass('glyphicon-arrow-down').addClass('glyphicon-arrow-' + data.light_motor);
+                $('#temperature-motor').removeClass('glyphicon-arrow-up').removeClass('glyphicon-arrow-down').addClass('glyphicon-arrow-' + data.temperature_motor);
             });
         }, 3000);
     });
 
 
-
-
-    </script>
+</script>
 {% endblock %}
