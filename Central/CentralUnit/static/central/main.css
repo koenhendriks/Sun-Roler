@@ -10,15 +10,27 @@ html, body{
     top: 200px;
     width: 320px;
     height: 40px;
-    background: lightgreen;
+    background: #fcf8e3;
 }
 
 .navigation-block{
     width: 80px;
     height: 40px;
-    border: 1px solid black;
     float:left;
     font-size:35px;
+}
+
+.navigation-block:active{
+    background-color: #d9edf7;
+}
+
+.navigation-block > span {
+    width: 80px;
+    height: 40px;
+}
+
+.right-button{
+    margin-left: 160px;
 }
 
 .panel{
