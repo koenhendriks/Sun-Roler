@@ -302,11 +302,11 @@ void checkLux(){
 * This function is supposed to be called twice a minute (30s)
 */
 void checkCelcius(){
-	uint32_t celcius = 0;
-	for (uint8_t i = 0; i <= 25; i++){
-		celcius += getCelcius();
+	uint32_t celcius = 0;								// This value is used for counting the total amount
+	for (uint8_t i = 0; i <= 25; i++){					// Run this 25 times:
+		celcius += getCelcius();						// Get the amount of Celcius and add it to the total
 	}
-	totalCelcius += (celcius/25);
+	totalCelcius += (celcius/25);						// Return the average
 }
 
 /*
@@ -317,36 +317,37 @@ void checkCelcius(){
 * Afterwards it resets 'totalLux'
 */
 void sendDataOrChangeScreen(){
-	TMI1638_writeNumber((1000 + (totalLux/2)));
+	TMI1638_writeNumber((1000 + (totalLux/2)));			// This is used for debugging purposes.
 	uart_transmit_value(sensor_id, currentState, totalLux/2);
-	if (!centralUnitConnected){
+														// Send the data via UART
+	if (!centralUnitConnected){							// If the centralUnit is disconnected:
 		if (totalLux/2 > upperLimit)
 		{
-			changeScreen(30);
+			changeScreen(30);							// Roll screen out
 		} else if (totalLux/2 < lowerLimit)
 		{
-			changeScreen(10);
+			changeScreen(10);							// Roll screen in
 		}
 	}
-	totalLux = 0;
+	totalLux = 0;										// Reset counter
 }
 
 /*
+* getDistance
 *
-*
-*
+* This function is used to measure the distance
 */
 uint16_t getDistance(){
-	uint32_t value= 0;
-	for ( uint8_t i = 0; i <= 10; i++){
-		Send_signal();
-		while (working = 0) {
-			_delay_us(10);
-		}
-		value += distance_cm;
-		_delay_ms(100);
+	uint32_t value= 0;									// Used for counting the total
+	for ( uint8_t i = 0; i <= 10; i++){					// Run 10 times
+		Send_signal();									// Send signal
+		while (working = 0) {							// Wait until finished
+			_delay_us(10);								//
+		}												//
+		value += distance_cm;							// Add the distance to the total
+		_delay_ms(100);									// Wait a little before the next measurement
 	}
-	return (uint16_t) value / 10;
+	return (uint16_t) value / 10;						// Return the average
 }
 
 /*
@@ -356,45 +357,44 @@ uint16_t getDistance(){
 * 1 = red
 */
 void setLED(uint8_t color){
-	// Clear LEDs
-	PORTB = PORTB & ~_BV(PINB0);
-	PORTB = PORTB & ~_BV(PINB2);
+	PORTB = PORTB & ~_BV(PINB0);						// Clear Green LED
+	PORTB = PORTB & ~_BV(PINB2);						// Clear Red LED
 	if (color == 0){ // Green
-		// Set green LED
-		PORTB = PORTB | _BV(PINB0);
+		PORTB = PORTB | _BV(PINB0);						// Set Green LED
 		} else { // Red
-		// Set red LED
-		PORTB = PORTB | _BV(PINB2);
+		PORTB = PORTB | _BV(PINB2);						// Set Red LED
 	}
 }
 
 /*
+* changeScreen
 *
-*
+* This function is called to change the position of the screen. The distance must be
+* passed as parameter.
 */
 void changeScreen(uint8_t change){
 	if (change > getDistance()){
-		setLED(1);
+		setLED(1);										// Set the Red LED on
 		while (change > getDistance()){
-			PORTB = PORTB | _BV(PINB1);
+			PORTB = PORTB | _BV(PINB1);					// Turn on the orange LED
 			_delay_ms(250);
-			PORTB = PORTB & ~_BV(PINB1);
+			PORTB = PORTB & ~_BV(PINB1);				// Turn off the orange LED
 			_delay_ms(250);
-			//TMI1638_writeNumber(getDistance());
+			//TMI1638_writeNumber(getDistance());		// This was used for debugging
 		}
-		currentState = 1;
+		currentState = 1;								// currently Rolled out
 		return;
 	} else if (change < getDistance()){
-		setLED(0);
+		setLED(0);										// Set the green LED on.
 		while (change < getDistance()){
-			PORTB = PORTB | _BV(PINB1);
+			PORTB = PORTB | _BV(PINB1);					// Turn on the orange LED
 			_delay_ms(250);
-			PORTB = PORTB & ~_BV(PINB1);
+			PORTB = PORTB & ~_BV(PINB1);				// Turn off the orange LED
 			_delay_ms(250);
-			//TMI1638_writeNumber(getDistance());
+			//TMI1638_writeNumber(getDistance());		// This was used for debugging
 					
 		}
-		currentState = 0;
+		currentState = 0;								// currently Rolled in
 		return;
 	} else {
 		return;
@@ -449,7 +449,7 @@ int main()
 	initLED();											// Initialize the three LEDs
 	TMI1638_setup();									// Initialize the Led & Key
 	TMI1638_writeNumber(3);								// Just for debugging purposes :)
-	HCSR04_init();										// This intializes the ultrasonicsensor, used to measure distance
+	HCSR04_init();										// This initializes the ultrasonicsensor, used to measure distance
  	SCH_Init_T0();										// This initializes the scheduler
 	
 	if (sensor_id == 5){								// Check which sensor is used. Sensor 5 is the lightsensor and 3 is the temperaturesensor
@@ -463,7 +463,7 @@ int main()
 														and the average of two measurements are sent via UART */
  	SCH_Add_Task(checkCentralUnit, 500, 1000);			// Send data via UART; Every second with a delay of 0,5 second
 	
- 	SCH_Start();										// Start the scheduler
+ 	SCH_Start();										// Start the scheduler; We do this after adding the tasks to make sure the Tasks are synchronised.
  	while(1){
  		SCH_Dispatch_Tasks();
  	}
