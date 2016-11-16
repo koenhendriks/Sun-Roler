@@ -57,13 +57,18 @@
             });
         }, 3000);
 
-        $('.minus').click(function(){
-
-
+        $('.minus').click(function () {
+            var input = $(this).siblings('input[type=text]');
+            if(parseInt(input.val()) > 0){
+                var minus = parseInt(input.val()) -1;
+                input.val(minus);
+            }
         });
 
-        $('.plus').click(function(){
-
+        $('.plus').click(function () {
+            var input = $(this).siblings('input[type=text]');
+                var plus = parseInt(input.val()) +1;
+                input.val(plus);
         });
     });
 
