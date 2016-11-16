@@ -138,25 +138,28 @@ class Control:
         elif (position_up[0] == 1) and (last_position[1] == 0):
             self.send_data(int(roll_out_distance[0]))
 
+
 if __name__ == '__main__':
-    # Open connections to sensors.
-    s1 = Control("/dev/ttyUSB0")
-    s2 = Control("/dev/ttyUSB1")
 
-    while 1:
-        # Try to make a connection with the sensors and read the data which is being sent.
+    # Try to make a connection with the sensors and read the data which is being sent.
+    while True:
         try:
-            s1.read_data()
-            s2.read_data()
-
-            # Check if user wants to roll in or roll out the sunscreen manually
-
-            if s1.get_sensor_id() != 0:
-                s1.control_sunscreen_manual(s1.get_sensor_id())
-
-            if s2.get_sensor_id() != 0:
-                s2.control_sunscreen_manual(s2.get_sensor_id())
+            s1 = Control("/dev/ttyUSB0")
+            s2 = Control("/dev/ttyUSB1")
 
         # If connection fails, try to connect again.
         except SerialException:
-            pass
+            continue
+        break
+
+    while True:
+        s1.read_data()
+        s2.read_data()
+
+        # Check if user wants to roll in or roll out the sunscreen manually
+
+        if s1.get_sensor_id() != 0:
+            s1.control_sunscreen_manual(s1.get_sensor_id())
+
+        if s2.get_sensor_id() != 0:
+            s2.control_sunscreen_manual(s2.get_sensor_id())
