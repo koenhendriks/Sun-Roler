@@ -98,20 +98,22 @@ class Control:
             else:
                 self.send_data(int(roll_out_distance[0]))
 
-    def control_sunscreen_manual(self, position):
+    def control_sunscreen_manual(self, sensor_id, position):
         """ Control sunscreen manually.
 
         Args:
+            sensor_id: The ID of the sensor of which the sunscreen must be controlled.
             position: Indicate whether sunscreen needs to be rolled in or rolled out.
             (zero is roll in and one is roll out)
 
         """
         roll_out_distance = self.db.select_sensor_setting(0, "roll_out_distance")
         roll_in_distance = self.db.select_sensor_setting(0, "roll_in_distance")
+        last_position = self.db.select_last_sensor_value(sensor_id)
 
-        if position == 0:
+        if (position == 0) and (last_position[1] == 1):
             self.send_data(int(roll_in_distance[0]))
-        elif position == 1:
+        elif (position == 1) and (last_position[1] == 0):
             self.send_data(int(roll_out_distance[0]))
 
 if __name__ == '__main__':
