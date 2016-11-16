@@ -231,6 +231,8 @@ ISR(TIMER0_COMPA_vect)
 // These values are used for the ultrasonic sensor
 uint16_t timer_value = 0;
 int distance_cm = 0;
+// This value contains the current state of the screen
+uint8_t currentState = 0;
 // This value is used to store the amount of Lux
 uint32_t totalLux= 0;
 uint32_t totalCelcius= 0;
@@ -299,10 +301,10 @@ void checkLux(){
 * in a value called 'totalCelcius'.
 * This function is supposed to be called twice a minute (30s)
 */
-void checkCeclius(){
+void checkCelcius(){
 	uint32_t celcius = 0;
 	for (uint8_t i = 0; i <= 25; i++){
-		celcius += getLux();
+		celcius += getCelcius();
 	}
 	totalCelcius += (celcius/25);
 }
@@ -315,7 +317,8 @@ void checkCeclius(){
 * Afterwards it resets 'totalLux'
 */
 void sendDataOrChangeScreen(){
-	uart_transmit_value(sensor_id, (totalLux/2));
+	TMI1638_writeNumber((1000 + (totalLux/2)));
+	uart_transmit_value(sensor_id, currentState, totalLux/2);
 	if (!centralUnitConnected){
 		if (totalLux/2 > upperLimit)
 		{
@@ -341,6 +344,7 @@ uint16_t getDistance(){
 			_delay_us(10);
 		}
 		value += distance_cm;
+		_delay_ms(100);
 	}
 	return (uint16_t) value / 10;
 }
@@ -378,6 +382,7 @@ void changeScreen(uint8_t change){
 			_delay_ms(250);
 			//TMI1638_writeNumber(getDistance());
 		}
+		currentState = 1;
 		return;
 	} else if (change < getDistance()){
 		setLED(0);
@@ -389,26 +394,30 @@ void changeScreen(uint8_t change){
 			//TMI1638_writeNumber(getDistance());
 					
 		}
+		currentState = 0;
 		return;
 	} else {
 		return;
 	}
 }
 
+/*
+* checkData
+*
+* This function checks for new data in the receive buffer and
+* changes the screen accordingly
+*/
 void checkData(){
-	//if (uart_check_receivebuffer() == 1){
-		uint8_t frame = uart_receive();
-		TMI1638_writeNumber(frame);
-		if (frame > 0){
-			PORTB = PORTB | _BV(PINB0);
-			PORTB = PORTB | _BV(PINB1);
-			PORTB = PORTB | _BV(PINB2);
-			centralUnit_counter = 255;
-			if (frame < 255){
-				changeScreen(frame);
+	if (uart_check_receivebuffer() == 1){				// Check if there's a new frame waiting in the buffer
+		uint8_t frame = uart_receive();					// Retrieve the frame
+		if (frame > 0){									// Check if the frame isn't empty
+			centralUnit_counter = 255;					// Reset the counter to prevent autonomous working
+			if (frame < 255){							/* 255 is used as keepalive. If 255 is sent we need to ignore it,
+														but still need to reset te counter as the centralunit is still connected */
+				changeScreen(frame);					// Change the screen to the distance received via UART
 			}
 		}
-	//}
+	}
 }
 
 /*
@@ -417,46 +426,44 @@ void checkData(){
 * Used to initialize the LEDs which represent the motor
 */
 void initLED(){
-	DDRB |= 0b00000111;		// Set B0 - B2 to output to accommodate for three LEDs
-	PORTB = _BV(PORTB0);	// Set B0 high; this is the starting position
+	DDRB |= 0b00000111;									// Set B0 - B2 to output to accommodate for three LEDs
+	PORTB = _BV(PORTB0);								// Set B0 high; this is the starting position (rolled in)
 }
 
 void checkCentralUnit(){
 	if (centralUnit_counter < 1){
-		centralUnitConnected = 0;
+		centralUnitConnected = 0;						// CentralUnit = not connected
 	} else {
-		centralUnitConnected = 1;
+		centralUnitConnected = 1;						// CentralUnit = connected
 	}
-	centralUnit_counter = centralUnit_counter - 1;
-}
-
-
-// This isn't needed probably
-void printDistance(){
-	//TMI1638_writeNumber(getDistance());
+	
+	if (centralUnit_counter > 0){						// Make sure that the timer doesnt overflow to 255
+		centralUnit_counter = centralUnit_counter - 1;	// Decrease timer counter
+	}													//
 }
 
 int main()
 {
- 	ADC_init();
-	uart_init();
-	initLED();
-	TMI1638_setup();
-	TMI1638_writeNumber(3);
-	HCSR04_init();
- 	SCH_Init_T0();
+ 	ADC_init();											// Initialize the Analog-Digital-Converter
+	uart_init();										// Initialize UART
+	initLED();											// Initialize the three LEDs
+	TMI1638_setup();									// Initialize the Led & Key
+	TMI1638_writeNumber(3);								// Just for debugging purposes :)
+	HCSR04_init();										// This intializes the ultrasonicsensor, used to measure distance
+ 	SCH_Init_T0();										// This initializes the scheduler
 	
-	if (sensor_id == 5){ 
- 		SCH_Add_Task(checkLux, 0, 30000);		// Check light levels; Every 30 seconds
+	if (sensor_id == 5){								// Check which sensor is used. Sensor 5 is the lightsensor and 3 is the temperaturesensor
+ 		SCH_Add_Task(checkLux, 0, 30000);				// Check light levels; Every 30 seconds
 	} else if (sensor_id == 3){
-		SCH_Add_Task(checkLux, 0, 30000);		// Check temperature levels; Every 30 seconds
+		SCH_Add_Task(checkCelcius, 0, 30000);			// Check temperature levels; Every 30 seconds
 	}
- 	SCH_Add_Task(checkData, 500, 5000);	// Check UART data; Every 5 seconds with a delay of 0,5 second
- 	SCH_Add_Task(sendDataOrChangeScreen, 1000, 60000);	// Send data via UART; Every 60 seconds with a delay of 1 second
- 	SCH_Add_Task(checkCentralUnit, 500, 1000);	// Send data via UART; Every second with a delay of 0,5 second
-	SCH_Add_Task(printDistance, 0, 1000);
+ 	SCH_Add_Task(checkData, 500, 5000);					// Check UART data; Every 5 seconds with a delay of 0,5 second
+ 	SCH_Add_Task(sendDataOrChangeScreen, 61000, 60000);	/* Send data via UART; Every 60 seconds with a delay of 61 seconds
+														61 seconds is used because the sensors are polled every 30 seconds
+														and the average of two measurements are sent via UART */
+ 	SCH_Add_Task(checkCentralUnit, 500, 1000);			// Send data via UART; Every second with a delay of 0,5 second
 	
- 	SCH_Start();
+ 	SCH_Start();										// Start the scheduler
  	while(1){
  		SCH_Dispatch_Tasks();
  	}
