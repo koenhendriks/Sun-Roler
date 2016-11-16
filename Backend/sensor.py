@@ -141,21 +141,21 @@ class Control:
 if __name__ == '__main__':
     # Open connections to sensors.
     s1 = Control("/dev/ttyUSB0")
-    # s2 = Control("/dev/ttyUSB1")
+    s2 = Control("/dev/ttyUSB1")
 
     while 1:
         # Try to make a connection with the sensors and read the data which is being sent.
         try:
             s1.read_data()
-            # s2.read_data()
+            s2.read_data()
 
             # Check if user wants to roll in or roll out the sunscreen manually
 
             if s1.get_sensor_id() != 0:
                 s1.control_sunscreen_manual(s1.get_sensor_id())
 
-            # if s2.get_sensor_id() != 0:
-                # s2.control_sunscreen_manual(s2.get_sensor_id())
+            if s2.get_sensor_id() != 0:
+                s2.control_sunscreen_manual(s2.get_sensor_id())
 
         # If connection fails, try to connect again.
         except SerialException:
