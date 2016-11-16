@@ -17,7 +17,7 @@ $(function () {
             }
         },
         yAxis: {
-            min: 15,
+            min: 100,
             title: {
                 text: 'lx',
                 rotation: 0
