@@ -7,68 +7,14 @@
 <!-- Slider main container -->
 <div class="swiper-container swiper-container-h">
     <div class="swiper-wrapper">
-        <div class="swiper-slide">
-            <div class="row">
-                <div class="col-xs-12">
-                    <div class="panel panel-warning">
-                        <div class="panel-heading">
-                            Temperature Sensor
-                        </div>
-                    </div>
-                    <div class="panel panel-info">
-                        <div class="panel-heading panel-full">
-                            <div class="row">
-                                <div class="col-xs-6">
-                                    <span class="glyphicon glyphicon-sunglasses icon-large"></span>
-                                </div>
-                                <div class="col-xs-6">
-                                    <p>Currently: </p>
-                                        <span class="text-large"><br/><span id="temperature">{{ temperature }}</span> &#8451;</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+        {% include "./slides/temperature.html" %}
 
-        <div class="swiper-slide">
-            <div class="row">
-                <div class="col-xs-12">
-                    <div class="panel panel-warning">
-                        <div class="panel-heading">
-                            Light Sensor
-                        </div>
-                    </div>
-                    <div class="panel panel-info">
-                        <div class="panel-heading panel-full">
-                            <div class="row">
-                                <div class="col-xs-6">
-                                    <span class="glyphicon glyphicon-lamp icon-large"></span>
-                                </div>
-                                <div class="col-xs-6">
-                                    <p>Currently: </p>
-                                    <span class="text-large"><br/><span id="light">{{ light }}</span> lx</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+        {% include "./slides/light.html" %}
 
         <div class="swiper-slide">
             {% include "./slides/v-slide-1.html" %}
         </div>
-        <div class="swiper-slide">
-            <div class="row">
-                <div class="col-xs-12">
-                    <div class="row">
-                        <div class="col-xs-12"><p class="text-center">Hier komt info over een sensoor ofzo</p></div>
-                    </div>
-                </div>
-            </div>
-        </div>
+
         <div class="swiper-slide">
             <div class="row">
                 <div class="col-xs-12">
