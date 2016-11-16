@@ -1,5 +1,6 @@
+var lightChart;
 $(function () {
-    Highcharts.chart('temperature-chart', {
+    lightChart = Highcharts.chart('light-chart', {
         chart: {
             type: 'area',
             width: 320,
@@ -9,7 +10,7 @@ $(function () {
             text: ''
         },
         xAxis: {
-            categories: ['1479305312', '1479305372', '1479305432', '1479305492', '1479305552', '1479305612', '1479305672'],
+            categories: [''],
             tickmarkPlacement: 'on',
             title: {
                 enabled: false
@@ -18,7 +19,7 @@ $(function () {
         yAxis: {
             min: 15,
             title: {
-                text: '℃',
+                text: 'lx',
                 rotation: 0
             },
             labels: {
@@ -30,7 +31,7 @@ $(function () {
         },
         tooltip: {
             formatter: function () {
-                return this.y + '℃'
+                return this.y + 'lx'
             }
         },
         plotOptions: {
@@ -46,7 +47,7 @@ $(function () {
         },
         series: [{
             showInLegend: false,
-            data: [20, 21, 20, 18, 19]
+            data: [0]
         }]
     });
 });

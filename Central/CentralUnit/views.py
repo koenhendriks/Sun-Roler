@@ -16,7 +16,7 @@ def index(request):
 
 
 def sensors(request):
-    latest_temps = Temperature.objects.order_by('-reading_time')[:5]
+    latest_temps = Temperature.objects.order_by('-reading_time')[:10]
     current_temperature = [t.sensor_value for t in latest_temps][0]
     history_temperature_y = list()
     history_temperature_x = list()
@@ -32,7 +32,7 @@ def sensors(request):
     if [t.screen_position for t in latest_temps][0] == 1:
         temperature_motor = 'down'
 
-    latest_lights = Light.objects.order_by('-reading_time')[:5]
+    latest_lights = Light.objects.order_by('-reading_time')[:10]
     current_light = [l.sensor_value for l in latest_lights][0]
     history_lights_y = list()
     history_lights_x = list()

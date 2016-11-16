@@ -58,6 +58,10 @@
                 $('#temperature').html(data.temperature);
                 $('#light-motor').removeClass('glyphicon-arrow-up').removeClass('glyphicon-arrow-down').addClass('glyphicon-arrow-' + data.light_motor);
                 $('#temperature-motor').removeClass('glyphicon-arrow-up').removeClass('glyphicon-arrow-down').addClass('glyphicon-arrow-' + data.temperature_motor);
+                temperatureChart.series[0].setData(data.history_temperature_y.reverse());
+                temperatureChart.xAxis[0].setCategories(data.history_temperature_x.reverse());
+                lightChart.series[0].setData(data.history_lights_y.reverse());
+                lightChart.xAxis[0].setCategories(data.history_lights_x.reverse());
             });
         }, 3000);
     });
