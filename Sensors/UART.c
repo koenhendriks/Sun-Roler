@@ -37,6 +37,7 @@ void uart_transmit(uint8_t data)
 	// send the data
 	UDR0 = data;
 }/** Uart_transmit_value** This function sends 5 frames. The first one for the identification of the sensor* And the 4 thereafter contain the data (32-bits)*/void uart_transmit_value(uint8_t identification, uint8_t state, uint32_t data){	uart_transmit(identification);	uart_transmit(state);
+	// This is used to split the 32bit over 4 frames of 8. (8x4 is 32)
 	uart_transmit((data & 0xff000000UL) >> 24);
 	uart_transmit((data & 0x00ff0000UL) >> 16);
 	uart_transmit((data & 0x0000ff00UL) >>  8);
