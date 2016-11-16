@@ -29,9 +29,9 @@ $(function () {
             }
         },
         tooltip: {
-            split: true,
-            valueSuffix: ' millions',
-            enabled: false
+            formatter: function () {
+                return this.y + '℃'
+            }
         },
         plotOptions: {
             area: {
