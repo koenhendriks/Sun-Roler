@@ -150,8 +150,12 @@ if __name__ == '__main__':
             # s2.read_data()
 
             # Check if user wants to roll in or roll out the sunscreen manually
-            s1.control_sunscreen_manual(s1.get_sensor_id())
-            # s2.control_sunscreen_manual(s2.get_sensor_id())
+
+            if s1.get_sensor_id() != 0:
+                s1.control_sunscreen_manual(s1.get_sensor_id())
+
+            # if s2.get_sensor_id() != 0:
+                # s2.control_sunscreen_manual(s2.get_sensor_id())
 
         # If connection fails, try to connect again.
         except SerialException:
