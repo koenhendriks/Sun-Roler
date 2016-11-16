@@ -1,8 +1,7 @@
 import datetime
 from django.http import JsonResponse
 from django.shortcuts import render
-from .models import Temperature, Light
-
+from .models import Temperature, Light, SensorSettings
 
 
 def index(request):
@@ -10,9 +9,39 @@ def index(request):
 
     latest_temp = Temperature.objects.order_by('-reading_time')[:1]
     latest_light = Light.objects.order_by('-reading_time')[:1]
+    roll_in_distance = SensorSettings.objects.get(setting_name='roll_in_distance')
+    roll_out_distance = SensorSettings.objects.get(setting_name='roll_out_distance')
+    context['roll_in_distance'] = roll_in_distance.setting_value
+    context['roll_out_distance'] = roll_out_distance.setting_value
     context['temperature'] = [t.sensor_value for t in latest_temp][0]
     context['light'] = [l.sensor_value for l in latest_light][0]
     return render(request, 'CentralUnit/index.html', context)
+
+
+def updateRollIn(request, value):
+    roll_in_distance = SensorSettings.objects.get(setting_name='roll_in_distance')
+    roll_in_distance.setting_value = int(value)
+    roll_in_distance.save()
+
+    return JsonResponse({
+        'value': value,
+        'status': 'success',
+        'message': 'Roll in updated',
+        'code': 200
+    })
+
+
+def updateRollOut(request, value):
+    roll_out_distance = SensorSettings.objects.get(setting_name='roll_out_distance')
+    roll_out_distance.setting_value = int(value)
+    roll_out_distance.save()
+
+    return JsonResponse({
+        'value': value,
+        'status': 'success',
+        'message': 'Roll Out updated',
+        'code': 200
+    })
 
 
 def sensors(request):

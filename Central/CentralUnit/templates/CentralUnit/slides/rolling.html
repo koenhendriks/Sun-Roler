@@ -5,11 +5,11 @@
             <div class="form-group">
                 <label for="roll_in_distance">Roll in at:</label>
                 <div class="input-group">
-                    <div class="input-group-addon minus">
+                    <div class="input-group-addon minus" data-state="in">
                         <span class="glyphicon glyphicon-minus"></span>
                     </div>
-                    <input type="text" class="form-control" id="roll_in_distance" placeholder="Amount">
-                    <div class="input-group-addon plus">
+                    <input type="text" class="form-control" id="roll_in_distance" placeholder="Amount" value="{{ roll_in_distance }}">
+                    <div class="input-group-addon plus" data-state="in">
                         <span class="glyphicon glyphicon-plus"></span>
                     </div>
                 </div>
@@ -18,11 +18,11 @@
             <div class="form-group">
                 <label for="roll_out_distance">Roll out at:</label>
                 <div class="input-group">
-                    <div class="input-group-addon minus">
+                    <div class="input-group-addon minus" data-state="out">
                         <span class="glyphicon glyphicon-minus"></span>
                     </div>
-                    <input type="text" class="form-control" id="roll_out_distance" placeholder="Amount">
-                    <div class="input-group-addon plus">
+                    <input type="text" class="form-control" id="roll_out_distance" placeholder="Amount" value="{{ roll_out_distance }}">
+                    <div class="input-group-addon plus" data-state="out">
                         <span class="glyphicon glyphicon-plus"></span>
                     </div>
                 </div>

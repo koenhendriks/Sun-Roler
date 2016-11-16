@@ -59,18 +59,26 @@
 
         $('.minus').click(function () {
             var input = $(this).siblings('input[type=text]');
+            var state = $(this).attr('data-state');
             if(parseInt(input.val()) > 0){
                 var minus = parseInt(input.val()) -1;
                 input.val(minus);
+                updateRoll(state)
             }
         });
 
         $('.plus').click(function () {
             var input = $(this).siblings('input[type=text]');
+            var state = $(this).attr('data-state');
                 var plus = parseInt(input.val()) +1;
                 input.val(plus);
+                updateRoll(state)
         });
     });
+
+    function updateRoll(state){
+        $.get('/update/roll'+state+'/'+$('#roll_'+state+'_distance').val())
+    }
 
 
 </script>
