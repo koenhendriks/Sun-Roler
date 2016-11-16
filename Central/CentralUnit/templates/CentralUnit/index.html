@@ -23,7 +23,7 @@
                                 </div>
                                 <div class="col-xs-6">
                                     <p>Currently: </p>
-                                        <span class="text-large"><br/>{{ temperature }} &#8451;</span>
+                                        <span class="text-large"><br/><span id="temperature">{{ temperature }}</span> &#8451;</span>
                                 </div>
                             </div>
                         </div>
@@ -48,7 +48,7 @@
                                 </div>
                                 <div class="col-xs-6">
                                     <p>Currently: </p>
-                                    <span class="text-large"><br/>210 lx</span>
+                                    <span class="text-large"><br/><span id="light">{{ light }}</span> lx</span>
                                 </div>
                             </div>
                         </div>
@@ -84,13 +84,14 @@
 {% endblock %}
 {% block script %}
     <script>
-        var swiperH = new Swiper('.swiper-container-h', {
+    var swiperH = new Swiper('.swiper-container-h', {
         pagination: '.swiper-pagination-h',
         paginationClickable: true,
         spaceBetween: 50,
         nextButton: '#h-next-slide',
         prevButton: '#h-prev-slide'
     });
+
     var swiperV = new Swiper('.swiper-container-v', {
         pagination: '.swiper-pagination-v',
         paginationClickable: true,
@@ -98,5 +99,18 @@
         nested: true,
         spaceBetween: 50
     });
+
+    $(document).ready(function(){
+        setInterval(function(){
+            $.get('/sensors', function(data){
+                $('#light').html(data.light);
+                $('#temperature').html(data.temperature);
+            });
+        }, 3000);
+    });
+
+
+
+
     </script>
 {% endblock %}
