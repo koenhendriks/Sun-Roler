@@ -5,29 +5,10 @@ import time
 class DB:
     """ Open and close connection with database and manipulate tables and rows in database.
 
-    This class provides functions to open and close a database connection, to insert, select
-    and delete sensor values and to insert log messages into the database.
+    This class provides functions to open and close a database connection
+    and to insert sensor values, settings and log messages.
 
     """
-
-    def json_return(self, c, r):
-        """ Return fetched row from SELECT statement in JSON format.
-
-        Taken from: http://www.cdotson.com/2014/06/generating-json-documents-from-sqlite-databases-in-python
-        and altered.
-
-        Args:
-            c: Cursor object.
-            r: Row to manipulate.
-
-        Returns:
-            d: JSON formatted data.
-
-        """
-        d = {}
-        for idx, col in enumerate(c.description):
-            d[col[0]] = r[idx]
-        return d
 
     def open(self):
         """ Open a connection with the database.
@@ -37,8 +18,7 @@ class DB:
             c: Cursor database connection object.
 
         """
-        conn = sqlite3.connect('control_unit.db')
-        conn.row_factory = self.json_return
+        conn = sqlite3.connect('control_unit.sqlite3')
         c = conn.cursor()
         return conn, c
 
@@ -57,12 +37,16 @@ class DB:
 
         Create tables to be able to store log messages, sensor settings and sensor values.
         Insert specified sensor names in table 'sensor_settings' to be able to store sensor settings.
-        Insert default roll in and roll out distances.
+        Insert default roll in and roll out distances and default values for sensor settings.
 
         """
-        conn, c = self.open()
+        conn, c = self.open()  # Specify sensor identification, name, default minimal value and default maximum value.
+        sensors = {1: ['anemometer', 0, 0],
+                   2: ['rain', 0, 0],
+                   3: ['temperature', 20, 25],
+                   4: ['humidity', 0, 0],
+                   5: ['light', 150, 250]}
 
-        sensors = {1: 'anemometer', 2: 'rain', 3: 'temperature', 4: 'humidity', 5: 'light'}
         c.execute("CREATE TABLE {tn} ({id_fn} {id_ft}, {s_fn} {s_ft}, {s_n_fn} {s_n_ft}, {s_v_fn} {s_v_ft})"
                   .format(tn='sensor_settings',
                           id_fn='ID', id_ft='INTEGER PRIMARY KEY AUTOINCREMENT',
@@ -76,127 +60,80 @@ class DB:
                           m_fn='message', m_ft='TEXT',
                           t_fn='log_time', t_ft='INTEGER'))
 
+        # Default roll in distance
         insert_values = (0, 'roll_in_distance', 10)
         c.execute("INSERT INTO sensor_settings (sensor, setting_name, setting_value) VALUES (?, ?, ?)",
                   insert_values)
 
-        insert_values = (0, 'roll_out_distance', 40)
+        # Default roll out distance
+        insert_values = (0, 'roll_out_distance', 30)
         c.execute("INSERT INTO sensor_settings (sensor, setting_name, setting_value) VALUES (?, ?, ?)",
                   insert_values)
 
         for key, value in sensors.items():
-            c.execute("CREATE TABLE {tn} ({id_fn} {id_ft}, {sv_fn} {sv_ft}, {rt_fn} {rt_ft})"
-                      .format(tn=value,
+            c.execute("CREATE TABLE {tn} ({id_fn} {id_ft}, {sv_fn} {sv_ft}, {sp_fn} {sp_ft}, {rt_fn} {rt_ft})"
+                      .format(tn=value[0],
                               id_fn='ID', id_ft='INTEGER PRIMARY KEY AUTOINCREMENT',
                               sv_fn='sensor_value', sv_ft='INTEGER',
+                              sp_fn='screen_position', sp_ft='INTEGER',
                               rt_fn='reading_time', rt_ft='INTEGER'))
 
-            insert_values = (key, 'min_value', 0)
+            insert_values = (key, 'sensor_name', value[0])
             c.execute("INSERT INTO sensor_settings (sensor, setting_name, setting_value) VALUES (?, ?, ?)",
                       insert_values)
 
-            insert_values = (key, 'max_value', 0)
+            insert_values = (key, 'min_value', value[1])
             c.execute("INSERT INTO sensor_settings (sensor, setting_name, setting_value) VALUES (?, ?, ?)",
                       insert_values)
 
-            insert_values = (key, 'sensor_name', value)
+            insert_values = (key, 'max_value', value[2])
             c.execute("INSERT INTO sensor_settings (sensor, setting_name, setting_value) VALUES (?, ?, ?)",
                       insert_values)
 
         self.close(conn)
 
-    def insert_sensor_value(self, sensor, value):
+    def insert_sensor_value(self, sensor_id, value, screen_pos):
         """ Insert sensor values in database.
 
         Args:
-            sensor: Name of sensor to store value of.
+            sensor_id: ID of sensor to store value of.
             value: Value of reading to store.
+            screen_pos: The position of the sunscreen.
 
         """
         conn, c = self.open()
-        insert_values = (value, int(time.time()))
-        c.execute("INSERT INTO {s} (sensor_value, reading_time) VALUES (?, ?)".format(
-            s=sensor), insert_values)
+
+        sensor_name = self.select_sensor_setting(sensor_id, 'sensor_name')
+
+        insert_values = (value, screen_pos, int(time.time()))
+        c.execute("INSERT INTO {s} (sensor_value, screen_position, reading_time) VALUES (?, ?, ?)".format(
+            s=sensor_name[0]), insert_values)
+
         self.close(conn)
 
-    def select_last_sensor_value(self, sensor_name):
-        """ Select last sensor value from database.
+    def select_last_sensor_value(self, sensor_id):
+        """ Select last sensor value and last known screen position from database.
 
         Args:
-            sensor_name: Name of sensor to select value from.
-
-        Returns:
-            zero: Return zero (0) if not rows fetched.
-            fetched_rows: The fetched rows from the database containing the sensor value.
+            sensor_id: ID of sensor to select value from.
 
         """
-
         conn, c = self.open()
-        c.execute("SELECT sensor_value FROM {tn} ORDER BY reading_time DESC LIMIT 1".format(
-            tn=sensor_name))
-        fetched_rows = c.fetchall()
+
+        sensor_name = self.select_sensor_setting(sensor_id, 'sensor_name')
+
+        c.execute("SELECT sensor_value, screen_position FROM {tn} ORDER BY reading_time DESC LIMIT 1".format(
+            tn=sensor_name[0]))
+
+        fetched_row = c.fetchone()
+
         self.close(conn)
-        if fetched_rows:
-            return fetched_rows
+
+        if fetched_row:
+            return fetched_row
         else:
             # If no reading found, return zero.
-            return [{'sensor_value': 0}]
-
-    def select_sensor_values(self, sensor_name, start_time, end_time=''):
-        """ Select sensor values from database.
-
-        Args:
-            sensor_name: Name of sensor to select values from.
-            start_time: Left boundary from time period to return values from.
-            end_time: Right boundary from time period to return values from.
-
-        Returns:
-            fetched_rows: The fetched rows from the database containing the sensor values.
-
-        """
-
-        # Check if end_time is given or not.
-        if not end_time:
-            end_time = "''"
-
-        conn, c = self.open()
-        c.execute("SELECT sensor_value FROM {tn} WHERE reading_time BETWEEN {ts} AND {te}".format(
-            tn=sensor_name, ts=start_time, te=end_time))
-        fetched_rows = c.fetchall()
-        self.close(conn)
-        return fetched_rows
-
-    def select_sensor_ids_names(self):
-        """ Select names and id's from all sensors from database.
-
-        Returns:
-            fetched_rows: The fetched rows from the database containing the names and the id's of the sensors.
-
-        """
-        conn, c = self.open()
-        c.execute("SELECT sensor, setting_value FROM sensor_settings WHERE setting_name = 'sensor_name'")
-        fetched_rows = c.fetchall()
-        self.close(conn)
-        return fetched_rows
-
-    def delete_sensor_value(self, sensor_name, start_time, end_time=''):
-        """ Delete sensor values from database.
-
-        Args:
-            sensor_name: Name of sensor to delete values from.
-            start_time: Left boundary from time period to delete values from.
-            end_time: Right boundary from time period to delete values from.
-
-        """
-
-        # Check if end_time is given or not.
-        if not end_time:
-            end_time = "''"
-
-        conn, c = self.open()
-        c.execute("DELETE FROM {tn} WHERE reading_time BETWEEN {ts} AND {te}".format(
-            tn=sensor_name, ts=start_time, te=end_time))
-        self.close(conn)
+            return [{'sensor_value': 0, 'screen_position': 0}]
 
     def select_sensor_setting(self, sensor_id, setting_name):
         """ Select setting from sensor_setting table.
@@ -207,39 +144,15 @@ class DB:
 
         """
         conn, c = self.open()
+
         c.execute("SELECT setting_value FROM sensor_settings WHERE sensor = {s} AND setting_name = '{sn}'"
                   .format(s=sensor_id, sn=setting_name))
-        fetched_rows = c.fetchall()
-        self.close(conn)
-        return fetched_rows
 
-    def insert_sensor_setting(self, sensor_id, setting_name, setting_value):
-        """ Insert setting into sensor_setting table.
+        fetched_row = c.fetchone()
 
-        Args:
-            sensor_id: ID of sensor.
-            setting_name: Name of setting to select value from.
-            setting_value: The value to store.
-
-        """
-        conn, c = self.open()
-        insert_values = (sensor_id, setting_name, setting_value)
-        c.execute("INSERT INTO sensor_settings (sensor, setting_name, setting_value) VALUES (?, ?, ?)", insert_values)
         self.close(conn)
 
-    def update_sensor_setting(self, sensor_id, setting_name, setting_value):
-        """ Update setting from sensor_setting table.
-
-        Args:
-            sensor_id: ID of sensor.
-            setting_name: Name of setting to update value from.
-            setting_value: The new value to store.
-
-        """
-        conn, c = self.open()
-        c.execute("UPDATE sensor_settings SET setting_value = {sv} WHERE setting_name = '{sn}' AND sensor = {s}".format(
-            sv=setting_value, sn=setting_name, s=sensor_id))
-        self.close(conn)
+        return fetched_row
 
     def insert_log_message(self, message):
         """ Insert log message into database.
@@ -249,20 +162,11 @@ class DB:
 
         """
         conn, c = self.open()
+
         insert_values = (message, int(time.time()))
         c.execute("INSERT INTO log (message, log_time) VALUES (?, ?)", insert_values)
+
         self.close(conn)
-
-    def select_log_messages(self):
-        """ Select all log messages from database.
-
-        """
-        conn, c = self.open()
-        c.execute("SELECT * FROM log")
-        fetched_rows = c.fetchall()
-        self.close(conn)
-        return fetched_rows
-
 
 if __name__ == "__main__":
     # Initialize database when this script is being called directly.

@@ -1,7 +1,6 @@
-import serial
+from Backend.database import DB
 from serial import SerialException
-
-from Backend.database import *
+import serial
 
 
 class SC:
@@ -18,7 +17,7 @@ class SC:
 
     """
 
-    def __init__(self, port, baud_rate, timeout):
+    def __init__(self, port, baud_rate, timeout=0):
         """ Initialize class with serial connection information and create DB object """
         self.port = port
         self.baud_rate = baud_rate
