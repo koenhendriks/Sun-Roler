@@ -1,5 +1,5 @@
 chardet==2.3.0
-Django==1.10.3
+Django==1.11.23
 django-bootstrap3==7.1.0
 louis==3.0.0
 pygobject==3.22.0
